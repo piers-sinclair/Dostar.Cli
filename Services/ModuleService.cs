@@ -94,13 +94,6 @@ internal sealed class ModuleService(string name, bool endpoints)
         if (content.Contains(usingStatement))
             return content;
 
-        var lastProjectUsing = content.LastIndexOf($"using {Prefix}.", StringComparison.Ordinal);
-        if (lastProjectUsing >= 0)
-        {
-            var endOfLine = content.IndexOf('\n', lastProjectUsing);
-            return content.Insert(endOfLine + 1, $"{usingStatement}\n");
-        }
-
         return $"{usingStatement}\n{content}";
     }
 
