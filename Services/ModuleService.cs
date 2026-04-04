@@ -2,11 +2,9 @@ namespace Dostar.Cli;
 
 internal sealed class ModuleService(string name, bool endpoints)
 {
-    private readonly RepoRoot _root   = FindRepoRoot();
-    private string Prefix             => Path.GetFileNameWithoutExtension(_root.SlnxPath);
-    private string ModulesDir         => Path.Combine(_root.Root, "backend", "Modules", name);
-    private string ApiCsprojPath      => Path.Combine(_root.Root, "backend", $"{Prefix}.Api", $"{Prefix}.Api.csproj");
-    private string ProgramCsPath      => Path.Combine(_root.Root, "backend", $"{Prefix}.Api", "Program.cs");
+    private readonly RepoRoot _root = FindRepoRoot();
+    private string Prefix     => Path.GetFileNameWithoutExtension(_root.SlnxPath);
+    private string ModulesDir => Path.Combine(_root.Root, "backend", "Modules", name);
 
     internal async Task<bool> AddAsync()
     {
@@ -16,19 +14,43 @@ internal sealed class ModuleService(string name, bool endpoints)
             return false;
         }
 
-        var targetFramework = await ReadTargetFrameworkAsync();
-        var model = new { name, prefix = Prefix, endpoints, targetFramework };
+        var apiCsprojPath = Path.Combine(_root.Root, "backend", $"{Prefix}.Api", $"{Prefix}.Api.csproj");
+        var implCsprojPath = Path.Combine(ModulesDir, $"{Prefix}.{name}.Implementation", $"{Prefix}.{name}.Implementation.csproj");
 
-        await ScaffoldProjectFilesAsync(model);
-        await AddProjectsToSolutionAsync();
-        await AddApiReferenceAsync();
+        await GenerateProjectFilesAsync(apiCsprojPath);
+        await SolutionRunner.AddProjectsAsync(_root.SlnxPath, "/backend/", ModuleProjectPaths(), _root.Root);
+        await SolutionRunner.AddReferenceAsync(apiCsprojPath, implCsprojPath, _root.Root);
         await RegisterModuleAsync();
 
         return true;
     }
 
-    private async Task ScaffoldProjectFilesAsync(object model)
+    private string[] ModuleProjectPaths() =>
+    [
+        $"backend/Modules/{name}/{Prefix}.{name}.Contracts/{Prefix}.{name}.Contracts.csproj",
+        $"backend/Modules/{name}/{Prefix}.{name}.Implementation/{Prefix}.{name}.Implementation.csproj",
+        $"backend/Modules/{name}/{Prefix}.{name}.UnitTests/{Prefix}.{name}.UnitTests.csproj",
+        $"backend/Modules/{name}/{Prefix}.{name}.IntegrationTests/{Prefix}.{name}.IntegrationTests.csproj",
+    ];
+
+    private static RepoRoot FindRepoRoot()
     {
+        var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (dir is not null)
+        {
+            var slnx = dir.GetFiles("*.slnx").FirstOrDefault();
+            if (slnx is not null)
+                return new(dir.FullName, slnx.FullName);
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException("Could not find repo root (no .slnx file found).");
+    }
+
+    private async Task GenerateProjectFilesAsync(string apiCsprojPath)
+    {
+        var targetFramework = await ReadTargetFrameworkAsync(apiCsprojPath);
+        var model = new { name, prefix = Prefix, endpoints, targetFramework };
         var contractsDir        = Path.Combine(ModulesDir, $"{Prefix}.{name}.Contracts");
         var implDir             = Path.Combine(ModulesDir, $"{Prefix}.{name}.Implementation");
         var unitTestsDir        = Path.Combine(ModulesDir, $"{Prefix}.{name}.UnitTests");
@@ -55,49 +77,54 @@ internal sealed class ModuleService(string name, bool endpoints)
         Console.WriteLine("  Generated project files.");
     }
 
-    private async Task AddProjectsToSolutionAsync()
+    private static async Task<string> ReadTargetFrameworkAsync(string apiCsprojPath)
     {
-        var projects = new[]
+        if (!File.Exists(apiCsprojPath))
         {
-            $"backend/Modules/{name}/{Prefix}.{name}.Contracts/{Prefix}.{name}.Contracts.csproj",
-            $"backend/Modules/{name}/{Prefix}.{name}.Implementation/{Prefix}.{name}.Implementation.csproj",
-            $"backend/Modules/{name}/{Prefix}.{name}.UnitTests/{Prefix}.{name}.UnitTests.csproj",
-            $"backend/Modules/{name}/{Prefix}.{name}.IntegrationTests/{Prefix}.{name}.IntegrationTests.csproj",
-        };
-
-        foreach (var project in projects)
-        {
-            var result = await ProcessRunner.RunAsync(
-                "dotnet",
-                ["sln", _root.SlnxPath, "add", "--solution-folder", "/backend/", project],
-                _root.Root);
-
-            if (result != 0)
-                Console.Error.WriteLine($"Warning: 'dotnet sln add' exited with code {result} for {project}");
+            Console.Error.WriteLine($"Warning: could not find {apiCsprojPath} to detect target framework; defaulting to net10.0.");
+            return "net10.0";
         }
 
-        Console.WriteLine($"  Added {projects.Length} projects to {Path.GetFileName(_root.SlnxPath)}.");
+        var xml = XDocument.Parse(await File.ReadAllTextAsync(apiCsprojPath));
+        var value = xml.Descendants("TargetFramework").FirstOrDefault()?.Value;
+        if (value is null)
+        {
+            Console.Error.WriteLine($"Warning: <TargetFramework> not found in {apiCsprojPath}; defaulting to net10.0.");
+            return "net10.0";
+        }
+
+        return value;
     }
 
-    private async Task AddApiReferenceAsync()
+    private static async Task RenderTemplateAsync(string templateName, object model, string outputPath)
     {
-        var implCsproj = Path.Combine(ModulesDir, $"{Prefix}.{name}.Implementation", $"{Prefix}.{name}.Implementation.csproj");
-        var result = await ProcessRunner.RunAsync("dotnet", ["add", ApiCsprojPath, "reference", implCsproj], _root.Root);
-        if (result != 0)
-            Console.Error.WriteLine($"Warning: 'dotnet add reference' exited with code {result}.");
-        else
-            Console.WriteLine($"  Added reference from {Prefix}.Api to {Prefix}.{name}.Implementation.");
+        var templateContent = LoadEmbeddedTemplate(templateName);
+        var template = Template.Parse(templateContent);
+        var result = await template.RenderAsync(model);
+        await File.WriteAllTextAsync(outputPath, result);
+    }
+
+    private static string LoadEmbeddedTemplate(string templateName)
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceName = $"Dostar.Cli.Templates.{templateName}";
+
+        using var stream = assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Embedded template '{resourceName}' not found.");
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
     }
 
     private async Task RegisterModuleAsync()
     {
-        if (!File.Exists(ProgramCsPath))
+        var programCsPath = Path.Combine(_root.Root, "backend", $"{Prefix}.Api", "Program.cs");
+        if (!File.Exists(programCsPath))
         {
-            Console.Error.WriteLine($"Warning: Program.cs not found at {ProgramCsPath}");
+            Console.Error.WriteLine($"Warning: Program.cs not found at {programCsPath}");
             return;
         }
 
-        var content = (await File.ReadAllTextAsync(ProgramCsPath)).Replace("\r\n", "\n");
+        var content = (await File.ReadAllTextAsync(programCsPath)).Replace("\r\n", "\n");
 
         if (content.Contains($"new {name}Module()"))
         {
@@ -108,7 +135,7 @@ internal sealed class ModuleService(string name, bool endpoints)
         content = EnsureUsingStatement(content);
         content = InsertModuleIntoArray(content);
 
-        await File.WriteAllTextAsync(ProgramCsPath, content);
+        await File.WriteAllTextAsync(programCsPath, content);
         Console.WriteLine($"  Registered {name}Module in Program.cs.");
     }
 
@@ -146,58 +173,6 @@ internal sealed class ModuleService(string name, bool endpoints)
         }
 
         return content.Insert(closingIndex, $"    new {name}Module(),\n");
-    }
-
-    private async Task<string> ReadTargetFrameworkAsync()
-    {
-        if (!File.Exists(ApiCsprojPath))
-        {
-            Console.Error.WriteLine($"Warning: could not find {ApiCsprojPath} to detect target framework; defaulting to net10.0.");
-            return "net10.0";
-        }
-
-        var xml = XDocument.Parse(await File.ReadAllTextAsync(ApiCsprojPath));
-        var value = xml.Descendants("TargetFramework").FirstOrDefault()?.Value;
-        if (value is null)
-        {
-            Console.Error.WriteLine($"Warning: <TargetFramework> not found in {ApiCsprojPath}; defaulting to net10.0.");
-            return "net10.0";
-        }
-
-        return value;
-    }
-
-    private static RepoRoot FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
-        while (dir is not null)
-        {
-            var slnx = dir.GetFiles("*.slnx").FirstOrDefault();
-            if (slnx is not null)
-                return new(dir.FullName, slnx.FullName);
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Could not find repo root (no .slnx file found).");
-    }
-
-    private static async Task RenderTemplateAsync(string templateName, object model, string outputPath)
-    {
-        var templateContent = LoadEmbeddedTemplate(templateName);
-        var template = Template.Parse(templateContent);
-        var result = await template.RenderAsync(model);
-        await File.WriteAllTextAsync(outputPath, result);
-    }
-
-    private static string LoadEmbeddedTemplate(string templateName)
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        var resourceName = $"Dostar.Cli.Templates.{templateName}";
-
-        using var stream = assembly.GetManifestResourceStream(resourceName)
-            ?? throw new InvalidOperationException($"Embedded template '{resourceName}' not found.");
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
     }
 }
 

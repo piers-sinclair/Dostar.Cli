@@ -2,8 +2,8 @@ namespace Dostar.Cli;
 
 internal sealed class ProjectService(string projectName, string? output)
 {
-    private const string TemplateRepoUrl   = "https://github.com/piers-sinclair/Dostar.git";
-    private const string GitDirectoryName  = ".git";
+    private const string TemplateRepoUrl    = "https://github.com/piers-sinclair/Dostar.git";
+    private const string GitDirectoryName   = ".git";
 
     private static readonly string[] TextExtensions =
     [
@@ -23,30 +23,17 @@ internal sealed class ProjectService(string projectName, string? output)
         Console.WriteLine($"Creating new project '{projectName}' in '{outputDir}'...");
         Console.WriteLine();
 
-        await CloneTemplateAsync(outputDir);
-        RemoveGitHistory(outputDir);
+        Console.WriteLine("Cloning Dostar template...");
+        await GitRunner.CloneAsync(TemplateRepoUrl, outputDir);
+
+        Console.WriteLine("Removing template git history...");
+        GitRunner.RemoveHistory(outputDir);
 
         Console.WriteLine("Renaming Dostar references...");
         ApplyProjectName(outputDir);
         Console.WriteLine("Renaming complete.");
 
         return outputDir;
-    }
-
-    private static async Task CloneTemplateAsync(string outputDir)
-    {
-        Console.WriteLine("Cloning Dostar template...");
-        var exitCode = await ProcessRunner.RunAsync("git", ["clone", TemplateRepoUrl, outputDir], Directory.GetCurrentDirectory());
-        if (exitCode != 0)
-            throw new InvalidOperationException("git clone failed.");
-    }
-
-    private static void RemoveGitHistory(string outputDir)
-    {
-        Console.WriteLine("Removing template git history...");
-        var gitDir = Path.Combine(outputDir, GitDirectoryName);
-        if (Directory.Exists(gitDir))
-            DeleteDirectoryForce(gitDir);
     }
 
     private void ApplyProjectName(string rootDir)
@@ -122,17 +109,5 @@ internal sealed class ProjectService(string projectName, string? output)
         }
 
         return false;
-    }
-
-    private static void DeleteDirectoryForce(string path)
-    {
-        foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
-        {
-            var attrs = File.GetAttributes(file);
-            if ((attrs & FileAttributes.ReadOnly) != 0)
-                File.SetAttributes(file, attrs & ~FileAttributes.ReadOnly);
-        }
-
-        Directory.Delete(path, recursive: true);
     }
 }
