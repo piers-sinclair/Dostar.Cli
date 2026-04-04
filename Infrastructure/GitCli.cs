@@ -1,6 +1,6 @@
 namespace Dostar.Cli;
 
-internal static class GitRunner
+internal static class GitCli
 {
     private const string GitDirectoryName = ".git";
 

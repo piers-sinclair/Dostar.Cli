@@ -24,10 +24,10 @@ internal sealed class ProjectService(string projectName, string? output)
         Console.WriteLine();
 
         Console.WriteLine("Cloning Dostar template...");
-        await GitRunner.CloneAsync(TemplateRepoUrl, outputDir);
+        await GitCli.CloneAsync(TemplateRepoUrl, outputDir);
 
         Console.WriteLine("Removing template git history...");
-        GitRunner.RemoveHistory(outputDir);
+        GitCli.RemoveHistory(outputDir);
 
         Console.WriteLine("Renaming Dostar references...");
         ApplyProjectName(outputDir);

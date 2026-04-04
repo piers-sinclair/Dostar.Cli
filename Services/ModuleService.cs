@@ -18,8 +18,8 @@ internal sealed class ModuleService(string name, bool endpoints)
         var implCsprojPath = Path.Combine(ModulesDir, $"{Prefix}.{name}.Implementation", $"{Prefix}.{name}.Implementation.csproj");
 
         await GenerateProjectFilesAsync(apiCsprojPath);
-        await SolutionRunner.AddProjectsAsync(_root.SlnxPath, "/backend/", ModuleProjectPaths(), _root.Root);
-        await SolutionRunner.AddReferenceAsync(apiCsprojPath, implCsprojPath, _root.Root);
+        await SolutionCli.AddProjectsAsync(_root.SlnxPath, "/backend/", ModuleProjectPaths(), _root.Root);
+        await SolutionCli.AddReferenceAsync(apiCsprojPath, implCsprojPath, _root.Root);
         await RegisterModuleAsync();
 
         return true;

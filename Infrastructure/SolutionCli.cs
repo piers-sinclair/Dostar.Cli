@@ -1,6 +1,6 @@
 namespace Dostar.Cli;
 
-internal static class SolutionRunner
+internal static class SolutionCli
 {
     internal static async Task AddProjectsAsync(string slnxPath, string solutionFolder, string[] projectPaths, string repoRoot)
     {
