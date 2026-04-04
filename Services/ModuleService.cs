@@ -2,7 +2,7 @@ namespace Dostar.Cli;
 
 internal sealed class ModuleService(string name, bool endpoints)
 {
-    private readonly RepoRoot _root = FindRepoRoot();
+    private readonly RepoRoot _root = RepoRoot.Find();
     private string Prefix     => Path.GetFileNameWithoutExtension(_root.SlnxPath);
     private string ModulesDir => Path.Combine(_root.Root, "backend", "Modules", name);
 
@@ -32,20 +32,6 @@ internal sealed class ModuleService(string name, bool endpoints)
         $"backend/Modules/{name}/{Prefix}.{name}.UnitTests/{Prefix}.{name}.UnitTests.csproj",
         $"backend/Modules/{name}/{Prefix}.{name}.IntegrationTests/{Prefix}.{name}.IntegrationTests.csproj",
     ];
-
-    private static RepoRoot FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
-        while (dir is not null)
-        {
-            var slnx = dir.GetFiles("*.slnx").FirstOrDefault();
-            if (slnx is not null)
-                return new(dir.FullName, slnx.FullName);
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Could not find repo root (no .slnx file found).");
-    }
 
     private async Task GenerateProjectFilesAsync(string apiCsprojPath)
     {
