@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dostar.{{ name }}.Implementation\Dostar.{{ name }}.Implementation.csproj" />
+    <ProjectReference Include="..\{{ prefix }}.{{ name }}.Implementation\{{ prefix }}.{{ name }}.Implementation.csproj" />
   </ItemGroup>
 
   <ItemGroup>

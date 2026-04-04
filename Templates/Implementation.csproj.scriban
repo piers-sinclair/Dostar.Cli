@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dostar.{{ name }}.Contracts\Dostar.{{ name }}.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\Dostar.SharedKernel\Dostar.SharedKernel.csproj" />
+    <ProjectReference Include="..\{{ prefix }}.{{ name }}.Contracts\{{ prefix }}.{{ name }}.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\{{ prefix }}.SharedKernel\{{ prefix }}.SharedKernel.csproj" />
   </ItemGroup>
 
   <ItemGroup>

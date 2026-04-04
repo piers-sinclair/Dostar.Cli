@@ -1,4 +1,4 @@
-namespace Dostar.{{ name }}.IntegrationTests;
+namespace {{ prefix }}.{{ name }}.IntegrationTests;
 
 public class {{ name }}ModuleIntegrationTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {

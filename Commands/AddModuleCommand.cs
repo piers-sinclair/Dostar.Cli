@@ -18,11 +18,7 @@ internal static class AddModuleCommand
         var command = new Command("add-module", "Scaffold a new feature module with Contracts, Implementation, UnitTests, and IntegrationTests projects");
         command.Arguments.Add(nameArg);
 
-        command.SetAction(async (parseResult, _) =>
-        {
-            var name = parseResult.GetValue(nameArg)!;
-            return await HandleAsync(name);
-        });
+        command.SetAction((parseResult, _) => HandleAsync(parseResult.GetValue(nameArg)!));
 
         return command;
     }
@@ -37,13 +33,15 @@ internal static class AddModuleCommand
             return 1;
         }
 
-        var repoRoot = FindRepoRoot();
-        if (repoRoot is null)
+        var root = FindRepoRoot();
+        if (root is null)
         {
-            Console.Error.WriteLine("Error: could not find repo root (no Dostar.slnx found).");
+            Console.Error.WriteLine("Error: could not find repo root (no .slnx file found).");
             return 1;
         }
 
+        var (repoRoot, slnxPath) = root.Value;
+        var prefix = Path.GetFileNameWithoutExtension(slnxPath);
         var modulesDir = Path.Combine(repoRoot, "backend", "Modules", name);
 
         if (Directory.Exists(modulesDir))
@@ -54,25 +52,23 @@ internal static class AddModuleCommand
 
         Console.WriteLine($"Scaffolding module '{name}'...");
 
-        var model = new { name };
+        var model = new { name, prefix };
 
-        // Create directory structure
-        var contractsDir = Path.Combine(modulesDir, $"Dostar.{name}.Contracts");
-        var implDir = Path.Combine(modulesDir, $"Dostar.{name}.Implementation");
-        var unitTestsDir = Path.Combine(modulesDir, $"Dostar.{name}.UnitTests");
-        var integrationTestsDir = Path.Combine(modulesDir, $"Dostar.{name}.IntegrationTests");
+        var contractsDir = Path.Combine(modulesDir, $"{prefix}.{name}.Contracts");
+        var implDir = Path.Combine(modulesDir, $"{prefix}.{name}.Implementation");
+        var unitTestsDir = Path.Combine(modulesDir, $"{prefix}.{name}.UnitTests");
+        var integrationTestsDir = Path.Combine(modulesDir, $"{prefix}.{name}.IntegrationTests");
 
         Directory.CreateDirectory(contractsDir);
         Directory.CreateDirectory(implDir);
         Directory.CreateDirectory(unitTestsDir);
         Directory.CreateDirectory(integrationTestsDir);
 
-        // Generate files from templates
         await RenderTemplateAsync("Contracts.csproj.scriban", model,
-            Path.Combine(contractsDir, $"Dostar.{name}.Contracts.csproj"));
+            Path.Combine(contractsDir, $"{prefix}.{name}.Contracts.csproj"));
 
         await RenderTemplateAsync("Implementation.csproj.scriban", model,
-            Path.Combine(implDir, $"Dostar.{name}.Implementation.csproj"));
+            Path.Combine(implDir, $"{prefix}.{name}.Implementation.csproj"));
 
         await RenderTemplateAsync("Module.cs.scriban", model,
             Path.Combine(implDir, $"{name}Module.cs"));
@@ -81,7 +77,7 @@ internal static class AddModuleCommand
             Path.Combine(implDir, "GlobalUsings.cs"));
 
         await RenderTemplateAsync("UnitTests.csproj.scriban", model,
-            Path.Combine(unitTestsDir, $"Dostar.{name}.UnitTests.csproj"));
+            Path.Combine(unitTestsDir, $"{prefix}.{name}.UnitTests.csproj"));
 
         await RenderTemplateAsync("UnitTestsGlobalUsings.cs.scriban", model,
             Path.Combine(unitTestsDir, "GlobalUsings.cs"));
@@ -90,7 +86,7 @@ internal static class AddModuleCommand
             Path.Combine(unitTestsDir, $"{name}ModuleTests.cs"));
 
         await RenderTemplateAsync("IntegrationTests.csproj.scriban", model,
-            Path.Combine(integrationTestsDir, $"Dostar.{name}.IntegrationTests.csproj"));
+            Path.Combine(integrationTestsDir, $"{prefix}.{name}.IntegrationTests.csproj"));
 
         await RenderTemplateAsync("IntegrationTestsGlobalUsings.cs.scriban", model,
             Path.Combine(integrationTestsDir, "GlobalUsings.cs"));
@@ -103,22 +99,18 @@ internal static class AddModuleCommand
 
         Console.WriteLine("  Generated project files.");
 
-        // Add projects to solution
-        var slnxPath = Path.Combine(repoRoot, "Dostar.slnx");
-        await AddProjectsToSolutionAsync(slnxPath, name, repoRoot);
+        await AddProjectsToSolutionAsync(slnxPath, name, prefix, repoRoot);
 
-        // Add project reference from Dostar.Api to Implementation
-        var apiCsproj = Path.Combine(repoRoot, "backend", "Dostar.Api", "Dostar.Api.csproj");
-        var implCsproj = Path.Combine(modulesDir, $"Dostar.{name}.Implementation", $"Dostar.{name}.Implementation.csproj");
+        var apiCsproj = Path.Combine(repoRoot, "backend", $"{prefix}.Api", $"{prefix}.Api.csproj");
+        var implCsproj = Path.Combine(modulesDir, $"{prefix}.{name}.Implementation", $"{prefix}.{name}.Implementation.csproj");
         var addRefResult = await RunProcessAsync("dotnet", $"add \"{apiCsproj}\" reference \"{implCsproj}\"", repoRoot);
         if (addRefResult != 0)
             Console.Error.WriteLine($"Warning: 'dotnet add reference' exited with code {addRefResult}.");
         else
-            Console.WriteLine($"  Added reference from Dostar.Api to Dostar.{name}.Implementation.");
+            Console.WriteLine($"  Added reference from {prefix}.Api to {prefix}.{name}.Implementation.");
 
-        // Register module in Program.cs
-        var programCsPath = Path.Combine(repoRoot, "backend", "Dostar.Api", "Program.cs");
-        AddModuleRegistration(programCsPath, name);
+        var programCsPath = Path.Combine(repoRoot, "backend", $"{prefix}.Api", "Program.cs");
+        AddModuleRegistration(programCsPath, name, prefix);
 
         Console.WriteLine($"Module '{name}' scaffolded successfully.");
         Console.WriteLine($"  Location: {modulesDir}");
@@ -147,14 +139,14 @@ internal static class AddModuleCommand
         return reader.ReadToEnd();
     }
 
-    private static async Task AddProjectsToSolutionAsync(string slnxPath, string name, string repoRoot)
+    private static async Task AddProjectsToSolutionAsync(string slnxPath, string name, string prefix, string repoRoot)
     {
         var projects = new[]
         {
-            $"backend/Modules/{name}/Dostar.{name}.Contracts/Dostar.{name}.Contracts.csproj",
-            $"backend/Modules/{name}/Dostar.{name}.Implementation/Dostar.{name}.Implementation.csproj",
-            $"backend/Modules/{name}/Dostar.{name}.UnitTests/Dostar.{name}.UnitTests.csproj",
-            $"backend/Modules/{name}/Dostar.{name}.IntegrationTests/Dostar.{name}.IntegrationTests.csproj",
+            $"backend/Modules/{name}/{prefix}.{name}.Contracts/{prefix}.{name}.Contracts.csproj",
+            $"backend/Modules/{name}/{prefix}.{name}.Implementation/{prefix}.{name}.Implementation.csproj",
+            $"backend/Modules/{name}/{prefix}.{name}.UnitTests/{prefix}.{name}.UnitTests.csproj",
+            $"backend/Modules/{name}/{prefix}.{name}.IntegrationTests/{prefix}.{name}.IntegrationTests.csproj",
         };
 
         foreach (var project in projects)
@@ -168,10 +160,10 @@ internal static class AddModuleCommand
                 Console.Error.WriteLine($"Warning: 'dotnet sln add' exited with code {result} for {project}");
         }
 
-        Console.WriteLine($"  Added {projects.Length} projects to Dostar.slnx.");
+        Console.WriteLine($"  Added {projects.Length} projects to {Path.GetFileName(slnxPath)}.");
     }
 
-    private static void AddModuleRegistration(string programCsPath, string name)
+    private static void AddModuleRegistration(string programCsPath, string name, string prefix)
     {
         if (!File.Exists(programCsPath))
         {
@@ -181,21 +173,19 @@ internal static class AddModuleCommand
 
         var content = File.ReadAllText(programCsPath);
 
-        // Check if module already registered
         if (content.Contains($"new {name}Module()"))
         {
             Console.WriteLine($"  {name}Module already registered in Program.cs.");
             return;
         }
 
-        // Add using statement for the new module's implementation namespace
-        var usingStatement = $"using Dostar.{name}.Implementation;";
+        var usingStatement = $"using {prefix}.{name}.Implementation;";
         if (!content.Contains(usingStatement))
         {
-            var lastDostarUsing = content.LastIndexOf("using Dostar.", StringComparison.Ordinal);
-            if (lastDostarUsing >= 0)
+            var lastProjectUsing = content.LastIndexOf($"using {prefix}.", StringComparison.Ordinal);
+            if (lastProjectUsing >= 0)
             {
-                var endOfLine = content.IndexOf('\n', lastDostarUsing);
+                var endOfLine = content.IndexOf('\n', lastProjectUsing);
                 content = content.Insert(endOfLine + 1, $"{usingStatement}\n");
             }
             else
@@ -204,7 +194,6 @@ internal static class AddModuleCommand
             }
         }
 
-        // Find the closing ]; of the modules array and insert new module before it
         var moduleArrayPattern = "IModule[] modules =\n[";
         var moduleArrayIndex = content.IndexOf(moduleArrayPattern, StringComparison.Ordinal);
         if (moduleArrayIndex < 0)
@@ -227,13 +216,14 @@ internal static class AddModuleCommand
         Console.WriteLine($"  Registered {name}Module in Program.cs.");
     }
 
-    private static string? FindRepoRoot()
+    private static (string Root, string SlnxPath)? FindRepoRoot()
     {
         var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
         while (dir is not null)
         {
-            if (File.Exists(Path.Combine(dir.FullName, "Dostar.slnx")))
-                return dir.FullName;
+            var slnx = dir.GetFiles("*.slnx").FirstOrDefault();
+            if (slnx is not null)
+                return (dir.FullName, slnx.FullName);
             dir = dir.Parent;
         }
 

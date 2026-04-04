@@ -1,4 +1,4 @@
-namespace Dostar.{{ name }}.Implementation;
+namespace {{ prefix }}.{{ name }}.Implementation;
 
 public class {{ name }}Module : IEndpointModule
 {

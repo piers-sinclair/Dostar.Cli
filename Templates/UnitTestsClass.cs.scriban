@@ -1,4 +1,4 @@
-namespace Dostar.{{ name }}.UnitTests;
+namespace {{ prefix }}.{{ name }}.UnitTests;
 
 public class {{ name }}ModuleTests
 {
@@ -7,7 +7,7 @@ public class {{ name }}ModuleTests
     {
         var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
         var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
-        var module = new Dostar.{{ name }}.Implementation.{{ name }}Module();
+        var module = new {{ prefix }}.{{ name }}.Implementation.{{ name }}Module();
 
         var exception = Record.Exception(() => module.RegisterServices(services, config));
 
