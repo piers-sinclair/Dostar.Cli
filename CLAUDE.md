@@ -32,7 +32,6 @@ CLAUDE.md                ← this file
 
 - **Global usings**: `GlobalUsings.cs` declares `global using` for namespaces used across multiple files. Avoid repeating `using` statements inside individual files.
 - **No comments that restate code**: use readable method and variable names instead.
-- **No generic abstractions**: keep helpers specific to what they actually do (e.g. `CloneDostarAsync` not `RunProcessAsync`).
 - **Test assertions**: **Shouldly** — never FluentAssertions or `Assert.*`.
 
 ---
