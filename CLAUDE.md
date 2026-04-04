@@ -68,6 +68,33 @@ Avoid: GPL, LGPL, AGPL, SSPL, BSL.
 
 ---
 
+## Working on a GitHub issue
+
+Every issue must be implemented on a dedicated feature branch and merged via a pull request. Never commit directly to `main`.
+
+### Branch & PR workflow
+
+1. **Create a branch** from `main` named `feat/issue-<N>-<short-description>`
+   ```bash
+   git checkout main && git pull
+   git checkout -b feat/issue-9-add-module-cmd
+   ```
+2. **Implement** the changes.
+3. **Build** — must pass with 0 warnings before committing:
+   ```bash
+   dotnet build
+   ```
+4. **Commit** with a message that references the issue (`Closes #N`).
+5. **Push** and open a PR targeting `main`:
+   ```bash
+   git push -u origin <branch>
+   gh pr create --title "..." --body "..."
+   ```
+
+Only open the PR once the build passes locally.
+
+---
+
 ## Keeping this file up to date
 
 Update `CLAUDE.md` whenever you add a new command or change a key convention.
