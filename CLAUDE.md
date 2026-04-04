@@ -19,8 +19,11 @@
 ```
 Commands/
   NewProjectCommand.cs   ← dostar new-project
+  AddModuleCommand.cs    ← dostar add-module
   TemplateRenamer.cs     ← renames Dostar → <ProjectName> in cloned template
+Templates/               ← embedded Scriban templates for add-module scaffolding
 Dostar.Cli.csproj
+Dostar.Cli.slnx
 GlobalUsings.cs          ← global using directives shared across the project
 Program.cs               ← entry point; registers all commands
 CLAUDE.md                ← this file
@@ -32,7 +35,6 @@ CLAUDE.md                ← this file
 
 - **Global usings**: `GlobalUsings.cs` declares `global using` for namespaces used across multiple files. Avoid repeating `using` statements inside individual files.
 - **No comments that restate code**: use readable method and variable names instead.
-- **No generic abstractions**: keep helpers specific to what they actually do (e.g. `CloneDostarAsync` not `RunProcessAsync`).
 - **Test assertions**: **Shouldly** — never FluentAssertions or `Assert.*`.
 
 ---
@@ -40,7 +42,9 @@ CLAUDE.md                ← this file
 ## Commands
 
 ```bash
-dostar new-project <ProjectName>   # clone Dostar template and rename references
+dostar new-project <ProjectName>              # clone Dostar template and rename references
+dostar add-module <ModuleName>                # scaffold Contracts/Implementation/UnitTests/IntegrationTests
+dostar add-module <ModuleName> --no-endpoints # scaffold as IModule (no HTTP endpoints)
 ```
 
 ---

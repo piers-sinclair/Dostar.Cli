@@ -1,4 +1,4 @@
-namespace Dostar.{{ name }}.IntegrationTests;
+namespace {{ prefix }}.{{ name }}.IntegrationTests;
 
 public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {

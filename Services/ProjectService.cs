@@ -1,8 +1,9 @@
-namespace Dostar.Cli.Commands;
+namespace Dostar.Cli;
 
-internal static class TemplateRenamer
+internal sealed class ProjectService(string projectName, string? output)
 {
-    private const string GitDirectoryName = ".git";
+    private const string TemplateRepoUrl    = "https://github.com/piers-sinclair/Dostar.git";
+    private const string GitDirectoryName   = ".git";
 
     private static readonly string[] TextExtensions =
     [
@@ -12,36 +13,59 @@ internal static class TemplateRenamer
         ".targets", ".bicep", ".http", ".razor", ".cshtml", ".toml"
     ];
 
-    internal static void Apply(string rootDir, string projectName)
+    internal async Task<string> CreateAsync()
     {
-        var projectNameLower = projectName.ToLowerInvariant();
-        RenameEntriesBottomUp(new DirectoryInfo(rootDir), projectName, projectNameLower);
-        SubstituteInFiles(rootDir, projectName, projectNameLower);
+        var outputDir = Path.GetFullPath(output ?? Path.Combine(Directory.GetCurrentDirectory(), projectName));
+
+        if (Directory.Exists(outputDir) && Directory.EnumerateFileSystemEntries(outputDir).Any())
+            throw new InvalidOperationException($"Output directory '{outputDir}' already exists and is not empty.");
+
+        Console.WriteLine($"Creating new project '{projectName}' in '{outputDir}'...");
+        Console.WriteLine();
+
+        Console.WriteLine("Cloning Dostar template...");
+        await GitCli.CloneAsync(TemplateRepoUrl, outputDir);
+
+        Console.WriteLine("Removing template git history...");
+        GitCli.RemoveHistory(outputDir);
+
+        Console.WriteLine("Renaming Dostar references...");
+        ApplyProjectName(outputDir);
+        Console.WriteLine("Renaming complete.");
+
+        return outputDir;
     }
 
-    private static void RenameEntriesBottomUp(DirectoryInfo dir, string projectName, string projectNameLower)
+    private void ApplyProjectName(string rootDir)
+    {
+        var projectNameLower = projectName.ToLowerInvariant();
+        RenameEntriesBottomUp(new DirectoryInfo(rootDir), projectNameLower);
+        SubstituteInFiles(rootDir, projectNameLower);
+    }
+
+    private void RenameEntriesBottomUp(DirectoryInfo dir, string projectNameLower)
     {
         foreach (var subDir in dir.GetDirectories())
         {
             if (subDir.Name == GitDirectoryName)
                 continue;
 
-            RenameEntriesBottomUp(subDir, projectName, projectNameLower);
+            RenameEntriesBottomUp(subDir, projectNameLower);
 
-            var newName = Substitute(subDir.Name, projectName, projectNameLower);
+            var newName = Substitute(subDir.Name, projectNameLower);
             if (newName != subDir.Name)
                 subDir.MoveTo(Path.Combine(subDir.Parent!.FullName, newName));
         }
 
         foreach (var file in dir.GetFiles())
         {
-            var newName = Substitute(file.Name, projectName, projectNameLower);
+            var newName = Substitute(file.Name, projectNameLower);
             if (newName != file.Name)
                 file.MoveTo(Path.Combine(file.DirectoryName!, newName));
         }
     }
 
-    private static void SubstituteInFiles(string rootDir, string projectName, string projectNameLower)
+    private void SubstituteInFiles(string rootDir, string projectNameLower)
     {
         var files = Directory.EnumerateFiles(rootDir, "*", SearchOption.AllDirectories)
             .Where(f => !IsUnderGitDirectory(rootDir, f))
@@ -52,7 +76,7 @@ internal static class TemplateRenamer
             try
             {
                 var content = File.ReadAllText(filePath);
-                var updated = Substitute(content, projectName, projectNameLower);
+                var updated = Substitute(content, projectNameLower);
                 if (updated != content)
                     File.WriteAllText(filePath, updated);
             }
@@ -63,14 +87,14 @@ internal static class TemplateRenamer
         }
     }
 
-    private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
-        Path.GetRelativePath(rootDir, filePath)
-            .StartsWith(GitDirectoryName + Path.DirectorySeparatorChar, StringComparison.Ordinal);
-
-    private static string Substitute(string input, string projectName, string projectNameLower) =>
+    private string Substitute(string input, string projectNameLower) =>
         input
             .Replace("Dostar", projectName, StringComparison.Ordinal)
             .Replace("dostar", projectNameLower, StringComparison.Ordinal);
+
+    private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
+        Path.GetRelativePath(rootDir, filePath)
+            .StartsWith(GitDirectoryName + Path.DirectorySeparatorChar, StringComparison.Ordinal);
 
     private static bool IsTextFile(string filePath)
     {

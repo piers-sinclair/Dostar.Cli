@@ -1,12 +1,13 @@
-namespace Dostar.{{ name }}.Implementation;
+namespace {{ prefix }}.{{ name }}.Implementation;
 
-public class {{ name }}Module : IEndpointModule
+public class {{ name }}Module : {{ if endpoints }}IEndpointModule{{ else }}IModule{{ end }}
 {
     public void RegisterServices(IServiceCollection services, IConfiguration config)
     {
     }
-
+{{ if endpoints }}
     public void MapEndpoints(IEndpointRouteBuilder app)
     {
     }
+{{ end -}}
 }

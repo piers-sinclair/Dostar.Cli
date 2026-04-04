@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>{{ target_framework }}</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dostar.{{ name }}.Implementation\Dostar.{{ name }}.Implementation.csproj" />
+    <ProjectReference Include="..\{{ prefix }}.{{ name }}.Implementation\{{ prefix }}.{{ name }}.Implementation.csproj" />
   </ItemGroup>
 
   <ItemGroup>
