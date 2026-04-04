@@ -58,7 +58,6 @@ internal static class NewProjectCommand
             return 1;
 
         RemoveGitHistory(outputDir);
-        RemoveCliTool(outputDir);
 
         Console.WriteLine("Renaming Dostar references...");
         TemplateRenamer.Apply(outputDir, projectName);
@@ -104,13 +103,6 @@ internal static class NewProjectCommand
         var gitDir = Path.Combine(outputDir, ".git");
         if (Directory.Exists(gitDir))
             DeleteDirectoryForce(gitDir);
-    }
-
-    private static void RemoveCliTool(string outputDir)
-    {
-        var toolsDir = Path.Combine(outputDir, "tools");
-        if (Directory.Exists(toolsDir))
-            Directory.Delete(toolsDir, recursive: true);
     }
 
     private static void PrintSuccessMessage(string projectName, string outputDir)
