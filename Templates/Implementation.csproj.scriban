@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>{{ target_framework }}</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-Recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+{{ if endpoints }}
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+{{ end }}
+  <ItemGroup>
+    <ProjectReference Include="..\{{ prefix }}.{{ name }}.Contracts\{{ prefix }}.{{ name }}.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\{{ prefix }}.SharedKernel\{{ prefix }}.SharedKernel.csproj" />
+  </ItemGroup>
+{{ if endpoints }}
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+  </ItemGroup>
+{{ end }}
+</Project>
