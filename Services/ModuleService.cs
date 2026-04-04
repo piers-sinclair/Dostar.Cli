@@ -49,8 +49,8 @@ internal sealed class ModuleService(string name, bool endpoints)
 
     private async Task GenerateProjectFilesAsync(string apiCsprojPath)
     {
-        var targetFramework = await ReadTargetFrameworkAsync(apiCsprojPath);
-        var model = new { name, prefix = Prefix, endpoints, targetFramework };
+        var targetFramework     = await CsprojReader.ReadTargetFrameworkAsync(apiCsprojPath);
+        var model               = new { name, prefix = Prefix, endpoints, targetFramework };
         var contractsDir        = Path.Combine(ModulesDir, $"{Prefix}.{name}.Contracts");
         var implDir             = Path.Combine(ModulesDir, $"{Prefix}.{name}.Implementation");
         var unitTestsDir        = Path.Combine(ModulesDir, $"{Prefix}.{name}.UnitTests");
@@ -62,58 +62,21 @@ internal sealed class ModuleService(string name, bool endpoints)
         Directory.CreateDirectory(integrationTestsDir);
 
         await Task.WhenAll(
-            RenderTemplateAsync("Contracts.csproj.scriban",                model, Path.Combine(contractsDir,         $"{Prefix}.{name}.Contracts.csproj")),
-            RenderTemplateAsync("Implementation.csproj.scriban",           model, Path.Combine(implDir,              $"{Prefix}.{name}.Implementation.csproj")),
-            RenderTemplateAsync("Module.cs.scriban",                       model, Path.Combine(implDir,              $"{name}Module.cs")),
-            RenderTemplateAsync("ImplementationGlobalUsings.cs.scriban",   model, Path.Combine(implDir,              "GlobalUsings.cs")),
-            RenderTemplateAsync("UnitTests.csproj.scriban",                model, Path.Combine(unitTestsDir,         $"{Prefix}.{name}.UnitTests.csproj")),
-            RenderTemplateAsync("UnitTestsGlobalUsings.cs.scriban",        model, Path.Combine(unitTestsDir,         "GlobalUsings.cs")),
-            RenderTemplateAsync("UnitTestsClass.cs.scriban",               model, Path.Combine(unitTestsDir,         $"{name}ModuleTests.cs")),
-            RenderTemplateAsync("IntegrationTests.csproj.scriban",         model, Path.Combine(integrationTestsDir,  $"{Prefix}.{name}.IntegrationTests.csproj")),
-            RenderTemplateAsync("IntegrationTestsGlobalUsings.cs.scriban", model, Path.Combine(integrationTestsDir,  "GlobalUsings.cs")),
-            RenderTemplateAsync("IntegrationTestsClass.cs.scriban",        model, Path.Combine(integrationTestsDir,  $"{name}ModuleIntegrationTests.cs")),
-            RenderTemplateAsync("ApiFactory.cs.scriban",                   model, Path.Combine(integrationTestsDir,  "ApiFactory.cs")));
+            TemplateRenderer.RenderAsync("Contracts.csproj.scriban",                model, Path.Combine(contractsDir,         $"{Prefix}.{name}.Contracts.csproj")),
+            TemplateRenderer.RenderAsync("Implementation.csproj.scriban",           model, Path.Combine(implDir,              $"{Prefix}.{name}.Implementation.csproj")),
+            TemplateRenderer.RenderAsync("Module.cs.scriban",                       model, Path.Combine(implDir,              $"{name}Module.cs")),
+            TemplateRenderer.RenderAsync("ImplementationGlobalUsings.cs.scriban",   model, Path.Combine(implDir,              "GlobalUsings.cs")),
+            TemplateRenderer.RenderAsync("UnitTests.csproj.scriban",                model, Path.Combine(unitTestsDir,         $"{Prefix}.{name}.UnitTests.csproj")),
+            TemplateRenderer.RenderAsync("UnitTestsGlobalUsings.cs.scriban",        model, Path.Combine(unitTestsDir,         "GlobalUsings.cs")),
+            TemplateRenderer.RenderAsync("UnitTestsClass.cs.scriban",               model, Path.Combine(unitTestsDir,         $"{name}ModuleTests.cs")),
+            TemplateRenderer.RenderAsync("IntegrationTests.csproj.scriban",         model, Path.Combine(integrationTestsDir,  $"{Prefix}.{name}.IntegrationTests.csproj")),
+            TemplateRenderer.RenderAsync("IntegrationTestsGlobalUsings.cs.scriban", model, Path.Combine(integrationTestsDir,  "GlobalUsings.cs")),
+            TemplateRenderer.RenderAsync("IntegrationTestsClass.cs.scriban",        model, Path.Combine(integrationTestsDir,  $"{name}ModuleIntegrationTests.cs")),
+            TemplateRenderer.RenderAsync("ApiFactory.cs.scriban",                   model, Path.Combine(integrationTestsDir,  "ApiFactory.cs")));
 
         Console.WriteLine("  Generated project files.");
     }
 
-    private static async Task<string> ReadTargetFrameworkAsync(string apiCsprojPath)
-    {
-        if (!File.Exists(apiCsprojPath))
-        {
-            Console.Error.WriteLine($"Warning: could not find {apiCsprojPath} to detect target framework; defaulting to net10.0.");
-            return "net10.0";
-        }
-
-        var xml = XDocument.Parse(await File.ReadAllTextAsync(apiCsprojPath));
-        var value = xml.Descendants("TargetFramework").FirstOrDefault()?.Value;
-        if (value is null)
-        {
-            Console.Error.WriteLine($"Warning: <TargetFramework> not found in {apiCsprojPath}; defaulting to net10.0.");
-            return "net10.0";
-        }
-
-        return value;
-    }
-
-    private static async Task RenderTemplateAsync(string templateName, object model, string outputPath)
-    {
-        var templateContent = LoadEmbeddedTemplate(templateName);
-        var template = Template.Parse(templateContent);
-        var result = await template.RenderAsync(model);
-        await File.WriteAllTextAsync(outputPath, result);
-    }
-
-    private static string LoadEmbeddedTemplate(string templateName)
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        var resourceName = $"Dostar.Cli.Templates.{templateName}";
-
-        using var stream = assembly.GetManifestResourceStream(resourceName)
-            ?? throw new InvalidOperationException($"Embedded template '{resourceName}' not found.");
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
-    }
 
     private async Task RegisterModuleAsync()
     {
@@ -175,5 +138,3 @@ internal sealed class ModuleService(string name, bool endpoints)
         return content.Insert(closingIndex, $"    new {name}Module(),\n");
     }
 }
-
-internal sealed record RepoRoot(string Root, string SlnxPath);
