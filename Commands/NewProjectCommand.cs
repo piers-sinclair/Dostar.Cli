@@ -38,7 +38,16 @@ internal static class NewProjectCommand
 
         try
         {
-            await new ProjectService(projectName, output).CreateAsync();
+            var outputDir = await new ProjectService(projectName, output).CreateAsync();
+
+            Console.WriteLine();
+            Console.WriteLine($"Project '{projectName}' created successfully at '{outputDir}'.");
+            Console.WriteLine();
+            Console.WriteLine("Next steps:");
+            Console.WriteLine($"  cd {projectName}");
+            Console.WriteLine("  git init && git add . && git commit -m \"Initial commit\"");
+            Console.WriteLine("  dotnet build");
+            Console.WriteLine("  cd frontend && pnpm dev");
             return 0;
         }
         catch (InvalidOperationException ex)

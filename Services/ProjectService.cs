@@ -13,7 +13,7 @@ internal sealed class ProjectService(string projectName, string? output)
         ".targets", ".bicep", ".http", ".razor", ".cshtml", ".toml"
     ];
 
-    internal async Task CreateAsync()
+    internal async Task<string> CreateAsync()
     {
         var outputDir = Path.GetFullPath(output ?? Path.Combine(Directory.GetCurrentDirectory(), projectName));
 
@@ -30,7 +30,7 @@ internal sealed class ProjectService(string projectName, string? output)
         ApplyProjectName(outputDir);
         Console.WriteLine("Renaming complete.");
 
-        PrintSuccessMessage(outputDir);
+        return outputDir;
     }
 
     private static async Task CloneTemplateAsync(string outputDir)
@@ -104,18 +104,6 @@ internal sealed class ProjectService(string projectName, string? output)
         input
             .Replace("Dostar", projectName, StringComparison.Ordinal)
             .Replace("dostar", projectNameLower, StringComparison.Ordinal);
-
-    private void PrintSuccessMessage(string outputDir)
-    {
-        Console.WriteLine();
-        Console.WriteLine($"Project '{projectName}' created successfully at '{outputDir}'.");
-        Console.WriteLine();
-        Console.WriteLine("Next steps:");
-        Console.WriteLine($"  cd {projectName}");
-        Console.WriteLine("  git init && git add . && git commit -m \"Initial commit\"");
-        Console.WriteLine("  dotnet build");
-        Console.WriteLine("  cd frontend && pnpm dev");
-    }
 
     private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
         Path.GetRelativePath(rootDir, filePath)
