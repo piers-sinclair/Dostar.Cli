@@ -15,15 +15,23 @@ internal static class AddModuleCommand
             Description = "PascalCase name for the new module (e.g. Billing)"
         };
 
+        var noEndpointsOption = new Option<bool>("--no-endpoints")
+        {
+            Description = "Scaffold as IModule (no HTTP endpoints) instead of IEndpointModule"
+        };
+
         var command = new Command("add-module", "Scaffold a new feature module with Contracts, Implementation, UnitTests, and IntegrationTests projects");
         command.Arguments.Add(nameArg);
+        command.Options.Add(noEndpointsOption);
 
-        command.SetAction((parseResult, _) => HandleAsync(parseResult.GetValue(nameArg)!));
+        command.SetAction((parseResult, _) => HandleAsync(
+            parseResult.GetValue(nameArg)!,
+            endpoints: !parseResult.GetValue(noEndpointsOption)));
 
         return command;
     }
 
-    private static async Task<int> HandleAsync(string name)
+    private static async Task<int> HandleAsync(string name, bool endpoints = true)
     {
         if (!PascalCaseRegex.IsMatch(name))
         {
@@ -52,7 +60,7 @@ internal static class AddModuleCommand
 
         Console.WriteLine($"Scaffolding module '{name}'...");
 
-        var model = new { name, prefix };
+        var model = new { name, prefix, endpoints };
 
         var contractsDir = Path.Combine(modulesDir, $"{prefix}.{name}.Contracts");
         var implDir = Path.Combine(modulesDir, $"{prefix}.{name}.Implementation");
