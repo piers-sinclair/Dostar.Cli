@@ -1,7 +1,3 @@
-using System.Reflection;
-using System.Text.RegularExpressions;
-using Scriban;
-
 namespace Dostar.Cli.Commands;
 
 internal static class AddModuleCommand
@@ -60,7 +56,9 @@ internal static class AddModuleCommand
 
         Console.WriteLine($"Scaffolding module '{name}'...");
 
-        var model = new { name, prefix, endpoints };
+        var apiCsprojPath = Path.Combine(repoRoot, "backend", $"{prefix}.Api", $"{prefix}.Api.csproj");
+        var targetFramework = await ReadTargetFrameworkAsync(apiCsprojPath);
+        var model = new { name, prefix, endpoints, targetFramework };
 
         var contractsDir = Path.Combine(modulesDir, $"{prefix}.{name}.Contracts");
         var implDir = Path.Combine(modulesDir, $"{prefix}.{name}.Implementation");
@@ -100,9 +98,8 @@ internal static class AddModuleCommand
 
         await AddProjectsToSolutionAsync(slnxPath, name, prefix, repoRoot);
 
-        var apiCsproj = Path.Combine(repoRoot, "backend", $"{prefix}.Api", $"{prefix}.Api.csproj");
         var implCsproj = Path.Combine(modulesDir, $"{prefix}.{name}.Implementation", $"{prefix}.{name}.Implementation.csproj");
-        var addRefResult = await RunProcessAsync("dotnet", $"add \"{apiCsproj}\" reference \"{implCsproj}\"", repoRoot);
+        var addRefResult = await RunProcessAsync("dotnet", $"add \"{apiCsprojPath}\" reference \"{implCsproj}\"", repoRoot);
         if (addRefResult != 0)
             Console.Error.WriteLine($"Warning: 'dotnet add reference' exited with code {addRefResult}.");
         else
@@ -213,6 +210,25 @@ internal static class AddModuleCommand
         content = content.Insert(closingIndex, $"    new {name}Module(),\n");
         await File.WriteAllTextAsync(programCsPath, content);
         Console.WriteLine($"  Registered {name}Module in Program.cs.");
+    }
+
+    private static async Task<string> ReadTargetFrameworkAsync(string apiCsprojPath)
+    {
+        if (!File.Exists(apiCsprojPath))
+        {
+            Console.Error.WriteLine($"Warning: could not find {apiCsprojPath} to detect target framework; defaulting to net10.0.");
+            return "net10.0";
+        }
+
+        var xml = XDocument.Parse(await File.ReadAllTextAsync(apiCsprojPath));
+        var value = xml.Descendants("TargetFramework").FirstOrDefault()?.Value;
+        if (value is null)
+        {
+            Console.Error.WriteLine($"Warning: <TargetFramework> not found in {apiCsprojPath}; defaulting to net10.0.");
+            return "net10.0";
+        }
+
+        return value;
     }
 
     private static (string Root, string SlnxPath)? FindRepoRoot()

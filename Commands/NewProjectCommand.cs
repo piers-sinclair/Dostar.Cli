@@ -1,6 +1,3 @@
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-
 namespace Dostar.Cli.Commands;
 
 internal static class NewProjectCommand
