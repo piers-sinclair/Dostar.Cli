@@ -1,17 +1,18 @@
 # Dostar CLI (`dostar`)
 
-The `dostar` CLI is a .NET global tool for scaffolding and managing Dostar modular monolith projects.
+The `dostar` CLI is a .NET global tool for scaffolding and managing [Dostar](https://github.com/piers-sinclair/Dostar) modular monolith projects.
 
-Source lives in `tools/Dostar.Cli/`.
+## Install
+
+```bash
+dotnet tool install -g Dostar.Cli
+```
 
 ## Build and install locally
 
 ```bash
-# Pack the tool (from repo root or tools/Dostar.Cli/)
-dotnet pack tools/Dostar.Cli
-
-# Install globally from the local nupkg
-dotnet tool install -g Dostar.Cli --add-source tools/Dostar.Cli/bin/Release/
+dotnet pack
+dotnet tool install -g Dostar.Cli --add-source bin/Release/
 ```
 
 After installation, the `dostar` command is available on your PATH.
@@ -21,6 +22,7 @@ After installation, the `dostar` command is available on your PATH.
 ```bash
 dostar --help
 dostar --version
+dostar new-project MyStartup
 ```
 
 ## Uninstall
