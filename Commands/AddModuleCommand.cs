@@ -72,38 +72,29 @@ internal static class AddModuleCommand
         Directory.CreateDirectory(unitTestsDir);
         Directory.CreateDirectory(integrationTestsDir);
 
-        await RenderTemplateAsync("Contracts.csproj.scriban", model,
-            Path.Combine(contractsDir, $"{prefix}.{name}.Contracts.csproj"));
-
-        await RenderTemplateAsync("Implementation.csproj.scriban", model,
-            Path.Combine(implDir, $"{prefix}.{name}.Implementation.csproj"));
-
-        await RenderTemplateAsync("Module.cs.scriban", model,
-            Path.Combine(implDir, $"{name}Module.cs"));
-
-        await RenderTemplateAsync("ImplementationGlobalUsings.cs.scriban", model,
-            Path.Combine(implDir, "GlobalUsings.cs"));
-
-        await RenderTemplateAsync("UnitTests.csproj.scriban", model,
-            Path.Combine(unitTestsDir, $"{prefix}.{name}.UnitTests.csproj"));
-
-        await RenderTemplateAsync("UnitTestsGlobalUsings.cs.scriban", model,
-            Path.Combine(unitTestsDir, "GlobalUsings.cs"));
-
-        await RenderTemplateAsync("UnitTestsClass.cs.scriban", model,
-            Path.Combine(unitTestsDir, $"{name}ModuleTests.cs"));
-
-        await RenderTemplateAsync("IntegrationTests.csproj.scriban", model,
-            Path.Combine(integrationTestsDir, $"{prefix}.{name}.IntegrationTests.csproj"));
-
-        await RenderTemplateAsync("IntegrationTestsGlobalUsings.cs.scriban", model,
-            Path.Combine(integrationTestsDir, "GlobalUsings.cs"));
-
-        await RenderTemplateAsync("IntegrationTestsClass.cs.scriban", model,
-            Path.Combine(integrationTestsDir, $"{name}ModuleIntegrationTests.cs"));
-
-        await RenderTemplateAsync("ApiFactory.cs.scriban", model,
-            Path.Combine(integrationTestsDir, "ApiFactory.cs"));
+        await Task.WhenAll(
+            RenderTemplateAsync("Contracts.csproj.scriban", model,
+                Path.Combine(contractsDir, $"{prefix}.{name}.Contracts.csproj")),
+            RenderTemplateAsync("Implementation.csproj.scriban", model,
+                Path.Combine(implDir, $"{prefix}.{name}.Implementation.csproj")),
+            RenderTemplateAsync("Module.cs.scriban", model,
+                Path.Combine(implDir, $"{name}Module.cs")),
+            RenderTemplateAsync("ImplementationGlobalUsings.cs.scriban", model,
+                Path.Combine(implDir, "GlobalUsings.cs")),
+            RenderTemplateAsync("UnitTests.csproj.scriban", model,
+                Path.Combine(unitTestsDir, $"{prefix}.{name}.UnitTests.csproj")),
+            RenderTemplateAsync("UnitTestsGlobalUsings.cs.scriban", model,
+                Path.Combine(unitTestsDir, "GlobalUsings.cs")),
+            RenderTemplateAsync("UnitTestsClass.cs.scriban", model,
+                Path.Combine(unitTestsDir, $"{name}ModuleTests.cs")),
+            RenderTemplateAsync("IntegrationTests.csproj.scriban", model,
+                Path.Combine(integrationTestsDir, $"{prefix}.{name}.IntegrationTests.csproj")),
+            RenderTemplateAsync("IntegrationTestsGlobalUsings.cs.scriban", model,
+                Path.Combine(integrationTestsDir, "GlobalUsings.cs")),
+            RenderTemplateAsync("IntegrationTestsClass.cs.scriban", model,
+                Path.Combine(integrationTestsDir, $"{name}ModuleIntegrationTests.cs")),
+            RenderTemplateAsync("ApiFactory.cs.scriban", model,
+                Path.Combine(integrationTestsDir, "ApiFactory.cs")));
 
         Console.WriteLine("  Generated project files.");
 
@@ -118,7 +109,7 @@ internal static class AddModuleCommand
             Console.WriteLine($"  Added reference from {prefix}.Api to {prefix}.{name}.Implementation.");
 
         var programCsPath = Path.Combine(repoRoot, "backend", $"{prefix}.Api", "Program.cs");
-        AddModuleRegistration(programCsPath, name, prefix);
+        await AddModuleRegistrationAsync(programCsPath, name, prefix);
 
         Console.WriteLine($"Module '{name}' scaffolded successfully.");
         Console.WriteLine($"  Location: {modulesDir}");
@@ -171,7 +162,7 @@ internal static class AddModuleCommand
         Console.WriteLine($"  Added {projects.Length} projects to {Path.GetFileName(slnxPath)}.");
     }
 
-    private static void AddModuleRegistration(string programCsPath, string name, string prefix)
+    private static async Task AddModuleRegistrationAsync(string programCsPath, string name, string prefix)
     {
         if (!File.Exists(programCsPath))
         {
@@ -179,7 +170,7 @@ internal static class AddModuleCommand
             return;
         }
 
-        var content = File.ReadAllText(programCsPath);
+        var content = (await File.ReadAllTextAsync(programCsPath)).Replace("\r\n", "\n");
 
         if (content.Contains($"new {name}Module()"))
         {
@@ -207,7 +198,7 @@ internal static class AddModuleCommand
         if (moduleArrayIndex < 0)
         {
             Console.Error.WriteLine("Warning: Could not find 'IModule[] modules' array in Program.cs. Please register the module manually.");
-            File.WriteAllText(programCsPath, content);
+            await File.WriteAllTextAsync(programCsPath, content);
             return;
         }
 
@@ -215,12 +206,12 @@ internal static class AddModuleCommand
         if (closingIndex < 0)
         {
             Console.Error.WriteLine("Warning: Could not find end of modules array in Program.cs. Please register the module manually.");
-            File.WriteAllText(programCsPath, content);
+            await File.WriteAllTextAsync(programCsPath, content);
             return;
         }
 
         content = content.Insert(closingIndex, $"    new {name}Module(),\n");
-        File.WriteAllText(programCsPath, content);
+        await File.WriteAllTextAsync(programCsPath, content);
         Console.WriteLine($"  Registered {name}Module in Program.cs.");
     }
 
