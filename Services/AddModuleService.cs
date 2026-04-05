@@ -1,6 +1,6 @@
 namespace Dostar.Cli;
 
-internal sealed class ModuleService(string name, bool endpoints)
+internal sealed class AddModuleService(string name, bool endpoints)
 {
     private readonly RepoRoot _root = RepoRoot.Find();
     private string Prefix     => Path.GetFileNameWithoutExtension(_root.SlnxPath);

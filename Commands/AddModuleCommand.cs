@@ -36,7 +36,7 @@ internal static class AddModuleCommand
         }
 
         Console.WriteLine($"Scaffolding module '{name}'...");
-        if (!await new ModuleService(name, endpoints).AddAsync())
+        if (!await new AddModuleService(name, endpoints).AddAsync())
             return 0;
 
         Console.WriteLine($"Module '{name}' scaffolded successfully.");
