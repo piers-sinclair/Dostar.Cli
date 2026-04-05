@@ -31,16 +31,6 @@ internal static class RemoveModuleCommand
         return command;
     }
 
-    private static async Task<int> HandleAsync(string name, bool dryRun, bool yes)
-    {
-        if (!name.IsPascalCase())
-        {
-            Console.Error.WriteLine($"Error: Module name '{name}' is not valid PascalCase.");
-            Console.Error.WriteLine("The name must start with an uppercase letter and contain only letters and digits.");
-            Console.Error.WriteLine("Examples: Billing, UserManagement, OrderProcessing");
-            return 1;
-        }
-
-        return await new RemoveModuleService(name, dryRun, yes).RemoveAsync();
-    }
+    private static Task<int> HandleAsync(string name, bool dryRun, bool yes) =>
+        new RemoveModuleService(name, dryRun, yes).RemoveAsync();
 }
