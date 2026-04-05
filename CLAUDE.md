@@ -99,6 +99,21 @@ Only open the PR once the build passes locally.
 
 ---
 
+
+
+Update `CLAUDE.md` whenever you add a new command or change a key convention.## Cross-repo dependency
+
+This CLI scaffolds and manages projects based on the [Dostar](https://github.com/piers-sinclair/Dostar) template. Changes to either repo can require updates to the other.
+
+**When Dostar changes, check if Dostar.Cli needs updating:**
+- New parameters in `infra/main.bicep` or parameter files → `ProjectService` may need to inject or placeholder those values during `new-project`
+- New template files containing project-name tokens → token replacement logic may need extending
+- New module structure conventions → `add-module` Scriban templates may need updating
+
+**When Dostar.Cli changes, check if Dostar needs updating:**
+- New `add-module` scaffold structure → verify it matches the module pattern in `CLAUDE.md` and `docs/module-pattern.md`
+- Changes to `new-project` output → verify the generated project still builds and runs correctly
+
 ## Keeping this file up to date
 
 Update `CLAUDE.md` whenever you add a new command or change a key convention.
