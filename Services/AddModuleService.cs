@@ -1,8 +1,8 @@
 namespace Dostar.Cli;
 
-internal sealed class AddModuleService(string name, bool endpoints)
+internal sealed class AddModuleService(string name, bool endpoints, RepoRoot? root = null)
 {
-    private readonly RepoRoot _root = RepoRoot.Find();
+    private readonly RepoRoot _root = root ?? RepoRoot.Find();
     private string Prefix     => Path.GetFileNameWithoutExtension(_root.SlnxPath);
     private string ModulesDir => Path.Combine(_root.Root, "backend", "Modules", name);
 

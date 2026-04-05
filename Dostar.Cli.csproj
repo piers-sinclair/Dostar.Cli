@@ -24,4 +24,12 @@
     <EmbeddedResource Include="Templates\*.scriban" WithCulture="false" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dostar.Cli.Tests" />
+  </ItemGroup>
+
 </Project>
