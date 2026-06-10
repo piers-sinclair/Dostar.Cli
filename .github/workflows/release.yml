@@ -2,10 +2,43 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    branches:
+      - main
+    paths:
+      - 'Dostar.Cli.csproj'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  publish:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      tag: ${{ steps.ver.outputs.tag }}
+      should-release: ${{ steps.ver.outputs.should-release }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check version
+        id: ver
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep -oP '(?<=<Version>)[^<]+' Dostar.Cli.csproj)
+          TAG="v${VERSION}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          if gh release view "${TAG}" &>/dev/null; then
+            echo "should-release=false" >> $GITHUB_OUTPUT
+          else
+            echo "should-release=true" >> $GITHUB_OUTPUT
+          fi
+
+  release:
+    needs: check
+    if: needs.check.outputs.should-release == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,5 +50,11 @@ jobs:
       - name: Pack
         run: dotnet pack --configuration Release --output nupkg
 
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check.outputs.tag }}
+          generate_release_notes: true
+
       - name: Push to NuGet
-        run: dotnet nuget push nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
