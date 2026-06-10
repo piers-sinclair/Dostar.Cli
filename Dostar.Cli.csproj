@@ -11,7 +11,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dostar</ToolCommandName>
     <PackageId>Dostar.Cli</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1.0</Version> <!-- x-release-please-version -->
     <Description>Dostar CLI — scaffold and manage Dostar modular monolith projects.</Description>
   </PropertyGroup>
 
