@@ -21,20 +21,28 @@ internal static class NewProjectCommand
             Required = true,
         };
 
+        var authorOption = new Option<string>("--author")
+        {
+            Description = "Full name or organisation to use in the LICENSE copyright notice (e.g. \"Jane Smith\" or \"Acme Corp\").",
+            Required = true,
+        };
+
         var command = new Command("new-project", "Bootstrap a new project from the Dostar template");
         command.Arguments.Add(nameArg);
         command.Options.Add(outputOption);
         command.Options.Add(ownerOption);
+        command.Options.Add(authorOption);
 
         command.SetAction((parseResult, _) => HandleAsync(
             parseResult.GetValue(nameArg)!,
             parseResult.GetValue(outputOption),
-            parseResult.GetValue(ownerOption)!));
+            parseResult.GetValue(ownerOption)!,
+            parseResult.GetValue(authorOption)!));
 
         return command;
     }
 
-    private static async Task<int> HandleAsync(string projectName, string? output, string owner)
+    private static async Task<int> HandleAsync(string projectName, string? output, string owner, string author)
     {
         if (!projectName.IsPascalCase())
         {
@@ -46,7 +54,7 @@ internal static class NewProjectCommand
 
         try
         {
-            var outputDir = await new ProjectService(projectName, output, owner).CreateAsync();
+            var outputDir = await new ProjectService(projectName, output, owner, author).CreateAsync();
 
             Console.WriteLine();
             Console.WriteLine($"Project '{projectName}' created successfully at '{outputDir}'.");
