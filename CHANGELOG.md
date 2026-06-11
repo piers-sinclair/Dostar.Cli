@@ -1,3 +1,36 @@
 # Changelog
 
+## [0.2.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.1.0...v0.2.0) (2026-06-11)
+
+
+### Features
+
+* add --no-endpoints flag to add-module ([7b22629](https://github.com/piers-sinclair/Dostar.Cli/commit/7b22629bb8aea9be948ece3e70e2e514f9d3dd86))
+* add test suite for add-module and remove-module ([0ffc072](https://github.com/piers-sinclair/Dostar.Cli/commit/0ffc072ba00e3df0ef2669ca0b3cea4fa675306f))
+* CLI dostar add-module command ([b98d2f3](https://github.com/piers-sinclair/Dostar.Cli/commit/b98d2f35ee4d8f8325fac4415bfeeadac02cddb7))
+* CLI dostar add-module command ([4f09f27](https://github.com/piers-sinclair/Dostar.Cli/commit/4f09f27be168441d44b09829f178596bcf49a364)), closes [#1](https://github.com/piers-sinclair/Dostar.Cli/issues/1)
+* CLI dostar remove-module subcommand ([3eb9516](https://github.com/piers-sinclair/Dostar.Cli/commit/3eb95167a473db811df7fada062f22a7b20791ae))
+* CLI dostar remove-module subcommand ([a6f6ea4](https://github.com/piers-sinclair/Dostar.Cli/commit/a6f6ea4beb74a46241c8caba6a4d8734f22a7418)), closes [#2](https://github.com/piers-sinclair/Dostar.Cli/issues/2)
+* initial Dostar CLI source ([01cd764](https://github.com/piers-sinclair/Dostar.Cli/commit/01cd76476d5366968de86d55c323727b7317fd05))
+* **new-project:** add --owner option to replace __GITHUB_ORG__ placeholder URLs ([dd8265f](https://github.com/piers-sinclair/Dostar.Cli/commit/dd8265f679cf421a086733815be2bc00b91a706b))
+* **new-project:** add --owner option to stamp GitHub org into project URLs ([a8f2148](https://github.com/piers-sinclair/Dostar.Cli/commit/a8f2148029da2645f9859bcbc0c9e266d833ab3b))
+
+
+### Bug Fixes
+
+* derive project prefix from .slnx filename — support any project name ([7b1c4e2](https://github.com/piers-sinclair/Dostar.Cli/commit/7b1c4e22b004b3388308b4f11aceb4b1890eb8f0))
+* register new-project command in Program.cs ([7e7e1b3](https://github.com/piers-sinclair/Dostar.Cli/commit/7e7e1b3a56b1a9310d3f0e07e6ff61e585108464))
+* stamp generated LICENSE with caller's author name and current year ([#10](https://github.com/piers-sinclair/Dostar.Cli/issues/10)) ([12c941d](https://github.com/piers-sinclair/Dostar.Cli/commit/12c941d1610d376ed22c988efa98623d20a05ea5))
+* upgrade Scriban 6.5.8 → 7.0.6 to resolve known vulnerabilities ([8841b68](https://github.com/piers-sinclair/Dostar.Cli/commit/8841b68b2937695085369e7933b4f27f71c54b86))
+
+
+### Documentation
+
+* add branch and PR workflow to CLAUDE.md ([c908b0c](https://github.com/piers-sinclair/Dostar.Cli/commit/c908b0c011b542dd64ee12b0f6dffc0b079f208e))
+* add CLAUDE.md with project context for Claude Code ([22e09e6](https://github.com/piers-sinclair/Dostar.Cli/commit/22e09e641cc4addb0badf588da1211447f4cc781))
+* add cross-repo dependency guidance to CLAUDE.md ([d0b83a7](https://github.com/piers-sinclair/Dostar.Cli/commit/d0b83a72af57e77cbb2d049b1405db6a0889a8bb))
+* fix README for standalone repo ([5e1b337](https://github.com/piers-sinclair/Dostar.Cli/commit/5e1b3376df6fc57a31ea14c58c27d58615df876d))
+
+## Changelog
+
 All notable changes to this project will be documented in this file. See [release-please](https://github.com/googleapis/release-please) for commit guidelines.
