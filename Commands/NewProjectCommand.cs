@@ -61,9 +61,8 @@ internal static class NewProjectCommand
             Console.WriteLine();
             Console.WriteLine("Next steps:");
             Console.WriteLine($"  cd {projectName}");
-            Console.WriteLine("  git init && git add . && git commit -m \"Initial commit\"");
-            Console.WriteLine("  dotnet build");
-            Console.WriteLine("  cd frontend && pnpm dev");
+            Console.WriteLine("  code .        # VS Code will prompt \"Reopen in Container\" — click it");
+            Console.WriteLine("  # Then read README.md for full setup instructions");
             return 0;
         }
         catch (InvalidOperationException ex)
