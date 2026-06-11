@@ -41,7 +41,7 @@ jobs:
         run: dotnet build --no-restore -c Release
 
       - name: Verify formatting
-        run: dotnet format --verify-no-changes
+        run: dotnet format Dostar.Cli.slnx --verify-no-changes
 
       - name: Test
         run: dotnet test tests/Dostar.Cli.Tests --no-build -c Release
