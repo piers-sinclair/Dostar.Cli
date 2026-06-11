@@ -2,8 +2,8 @@ namespace Dostar.Cli;
 
 internal sealed class ProjectService(string projectName, string? output)
 {
-    private const string TemplateRepoUrl    = "https://github.com/piers-sinclair/Dostar.git";
-    private const string GitDirectoryName   = ".git";
+    private const string TemplateRepoUrl = "https://github.com/piers-sinclair/Dostar.git";
+    private const string GitDirectoryName = ".git";
 
     private static readonly string[] TextExtensions =
     [
