@@ -15,18 +15,26 @@ internal static class NewProjectCommand
         };
         outputOption.Aliases.Add("-o");
 
+        var ownerOption = new Option<string>("--owner")
+        {
+            Description = "GitHub organisation or username that will own the repo (e.g. acme-corp). Replaces the template author's GitHub identity in README badges, Bicep repositoryUrl, dependabot assignees/reviewers, and the create-issue skill.",
+            Required = true,
+        };
+
         var command = new Command("new-project", "Bootstrap a new project from the Dostar template");
         command.Arguments.Add(nameArg);
         command.Options.Add(outputOption);
+        command.Options.Add(ownerOption);
 
         command.SetAction((parseResult, _) => HandleAsync(
             parseResult.GetValue(nameArg)!,
-            parseResult.GetValue(outputOption)));
+            parseResult.GetValue(outputOption),
+            parseResult.GetValue(ownerOption)!));
 
         return command;
     }
 
-    private static async Task<int> HandleAsync(string projectName, string? output)
+    private static async Task<int> HandleAsync(string projectName, string? output, string owner)
     {
         if (!projectName.IsPascalCase())
         {
@@ -38,7 +46,7 @@ internal static class NewProjectCommand
 
         try
         {
-            var outputDir = await new ProjectService(projectName, output).CreateAsync();
+            var outputDir = await new ProjectService(projectName, output, owner).CreateAsync();
 
             Console.WriteLine();
             Console.WriteLine($"Project '{projectName}' created successfully at '{outputDir}'.");
