@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.2.0...v0.2.1) (2026-06-11)
+
+
+### Bug Fixes
+
+* preserve CLI tool references during project-name substitution ([#15](https://github.com/piers-sinclair/Dostar.Cli/issues/15)) ([0e8741e](https://github.com/piers-sinclair/Dostar.Cli/commit/0e8741e67190dfd622e63b71c02291ca69b69999))
+* replace post-scaffold commands with devcontainer instructions ([#12](https://github.com/piers-sinclair/Dostar.Cli/issues/12)) ([7888178](https://github.com/piers-sinclair/Dostar.Cli/commit/788817873853bd01272544ef612687af30bf2559))
+
 ## [0.2.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.1.0...v0.2.0) (2026-06-11)
 
 
