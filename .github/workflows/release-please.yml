@@ -6,8 +6,8 @@
 #      "chore(main): release X.Y.Z" with a CHANGELOG.md diff and version
 #      bumps in .release-please-manifest.json and Dostar.Cli.csproj.
 #   3. If only hidden types (chore:, ci:, refactor:, test:) exist, does nothing.
-#   4. Merging the Release PR creates a GitHub Release + git tag (e.g. v0.2.0),
-#      which triggers nuget-publish.yml to push the new version to NuGet.
+#   4. Merging the Release PR creates a GitHub Release + git tag (e.g. v0.2.0)
+#      and this workflow calls nuget-publish.yml directly to push to NuGet.
 #
 # Semver rules:  fix: → patch   feat: → minor   feat!:/BREAKING CHANGE: → major
 # Config:        .release-please-config.json  (changelog sections + extra-files)
@@ -26,8 +26,17 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  publish:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    uses: ./.github/workflows/nuget-publish.yml
+    secrets: inherit

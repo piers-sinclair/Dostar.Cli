@@ -1,9 +1,12 @@
-# Publishes Dostar.Cli to NuGet.org when a GitHub Release is created.
+# Publishes Dostar.Cli to NuGet.org after a release is created.
 #
-# This workflow is the second half of the release pipeline:
+# Called by release-please.yml via workflow_call when it creates a release.
+# workflow_dispatch is retained as a manual escape hatch.
 #
-#   release-please.yml  →  creates the GitHub Release + git tag
-#   nuget-publish.yml   →  fires on that release event and pushes to NuGet
+# NOTE: This uses workflow_call rather than `release: published` because
+# GitHub does not trigger workflows from events authored by GITHUB_TOKEN —
+# release-please uses GITHUB_TOKEN to create the release, so a
+# `release: published` trigger would never fire.
 #
 # The version packed into the .nupkg comes directly from <Version> in
 # Dostar.Cli.csproj, which release-please already bumped in its Release PR.
@@ -16,16 +19,14 @@
 name: NuGet Publish
 
 on:
-  release:
-    types: [published]
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.release.tag_name }}
 
       - uses: actions/setup-dotnet@v4
         with:
