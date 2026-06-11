@@ -89,16 +89,14 @@ internal sealed class ProjectService(string projectName, string? output, string 
 
     private string Substitute(string input, string projectNameLower)
     {
-        // Protect "piers-sinclair/Dostar.Cli" before URL replacement — the ".Cli" suffix makes
-        // it a substring of "piers-sinclair/Dostar", so a naive replace would corrupt it.
         const string cliProtect = "\x01DOSTAR_CLI_REF\x01";
         return input
             .Replace("piers-sinclair/Dostar.Cli", cliProtect)
-            .Replace("piers-sinclair/Dostar", $"{githubOrg}/Dostar")   // project repo URLs
-            .Replace("\"piers-sinclair\"", $"\"{githubOrg}\"")          // dependabot YAML values
+            .Replace("piers-sinclair/Dostar", $"{githubOrg}/Dostar")
+            .Replace("\"piers-sinclair\"", $"\"{githubOrg}\"")
             .Replace("Dostar", projectName, StringComparison.Ordinal)
             .Replace("dostar", projectNameLower, StringComparison.Ordinal)
-            .Replace(cliProtect, "piers-sinclair/Dostar.Cli");          // restore CLI tool ref
+            .Replace(cliProtect, "piers-sinclair/Dostar.Cli");
     }
 
     private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
