@@ -1,0 +1,39 @@
+# Publishes Dostar.Cli to NuGet.org after a release is created.
+#
+# Called by release-please.yml via workflow_call when it creates a release.
+# workflow_dispatch is retained as a manual escape hatch.
+#
+# NOTE: This uses workflow_call rather than `release: published` because
+# GitHub does not trigger workflows from events authored by GITHUB_TOKEN —
+# release-please uses GITHUB_TOKEN to create the release, so a
+# `release: published` trigger would never fire.
+#
+# The version packed into the .nupkg comes directly from <Version> in
+# Dostar.Cli.csproj, which release-please already bumped in its Release PR.
+#
+# Prerequisites:
+#   NUGET_API_KEY secret must be set in repo Settings → Secrets → Actions.
+#   The key must have "Push new packages and package versions" scope on NuGet.org
+#   for the Dostar.Cli package.
+
+name: NuGet Publish
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Pack
+        run: dotnet pack --configuration Release --output nupkg
+
+      - name: Push to NuGet
+        run: dotnet nuget push nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

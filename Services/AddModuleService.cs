@@ -3,7 +3,7 @@ namespace Dostar.Cli;
 internal sealed class AddModuleService(string name, bool endpoints, RepoRoot? root = null)
 {
     private readonly RepoRoot _root = root ?? RepoRoot.Find();
-    private string Prefix     => Path.GetFileNameWithoutExtension(_root.SlnxPath);
+    private string Prefix => Path.GetFileNameWithoutExtension(_root.SlnxPath);
     private string ModulesDir => Path.Combine(_root.Root, "backend", "Modules", name);
 
     internal async Task<bool> AddAsync()
@@ -35,11 +35,11 @@ internal sealed class AddModuleService(string name, bool endpoints, RepoRoot? ro
 
     private async Task GenerateProjectFilesAsync(string apiCsprojPath)
     {
-        var targetFramework     = await CsprojReader.ReadTargetFrameworkAsync(apiCsprojPath);
-        var model               = new { name, prefix = Prefix, endpoints, targetFramework };
-        var contractsDir        = Path.Combine(ModulesDir, $"{Prefix}.{name}.Contracts");
-        var implDir             = Path.Combine(ModulesDir, $"{Prefix}.{name}.Implementation");
-        var unitTestsDir        = Path.Combine(ModulesDir, $"{Prefix}.{name}.UnitTests");
+        var targetFramework = await CsprojReader.ReadTargetFrameworkAsync(apiCsprojPath);
+        var model = new { name, prefix = Prefix, endpoints, targetFramework };
+        var contractsDir = Path.Combine(ModulesDir, $"{Prefix}.{name}.Contracts");
+        var implDir = Path.Combine(ModulesDir, $"{Prefix}.{name}.Implementation");
+        var unitTestsDir = Path.Combine(ModulesDir, $"{Prefix}.{name}.UnitTests");
         var integrationTestsDir = Path.Combine(ModulesDir, $"{Prefix}.{name}.IntegrationTests");
 
         Directory.CreateDirectory(contractsDir);
@@ -48,17 +48,17 @@ internal sealed class AddModuleService(string name, bool endpoints, RepoRoot? ro
         Directory.CreateDirectory(integrationTestsDir);
 
         await Task.WhenAll(
-            TemplateRenderer.RenderAsync("Contracts.csproj.scriban",                model, Path.Combine(contractsDir,         $"{Prefix}.{name}.Contracts.csproj")),
-            TemplateRenderer.RenderAsync("Implementation.csproj.scriban",           model, Path.Combine(implDir,              $"{Prefix}.{name}.Implementation.csproj")),
-            TemplateRenderer.RenderAsync("Module.cs.scriban",                       model, Path.Combine(implDir,              $"{name}Module.cs")),
-            TemplateRenderer.RenderAsync("ImplementationGlobalUsings.cs.scriban",   model, Path.Combine(implDir,              "GlobalUsings.cs")),
-            TemplateRenderer.RenderAsync("UnitTests.csproj.scriban",                model, Path.Combine(unitTestsDir,         $"{Prefix}.{name}.UnitTests.csproj")),
-            TemplateRenderer.RenderAsync("UnitTestsGlobalUsings.cs.scriban",        model, Path.Combine(unitTestsDir,         "GlobalUsings.cs")),
-            TemplateRenderer.RenderAsync("UnitTestsClass.cs.scriban",               model, Path.Combine(unitTestsDir,         $"{name}ModuleTests.cs")),
-            TemplateRenderer.RenderAsync("IntegrationTests.csproj.scriban",         model, Path.Combine(integrationTestsDir,  $"{Prefix}.{name}.IntegrationTests.csproj")),
-            TemplateRenderer.RenderAsync("IntegrationTestsGlobalUsings.cs.scriban", model, Path.Combine(integrationTestsDir,  "GlobalUsings.cs")),
-            TemplateRenderer.RenderAsync("IntegrationTestsClass.cs.scriban",        model, Path.Combine(integrationTestsDir,  $"{name}ModuleIntegrationTests.cs")),
-            TemplateRenderer.RenderAsync("ApiFactory.cs.scriban",                   model, Path.Combine(integrationTestsDir,  "ApiFactory.cs")));
+            TemplateRenderer.RenderAsync("Contracts.csproj.scriban", model, Path.Combine(contractsDir, $"{Prefix}.{name}.Contracts.csproj")),
+            TemplateRenderer.RenderAsync("Implementation.csproj.scriban", model, Path.Combine(implDir, $"{Prefix}.{name}.Implementation.csproj")),
+            TemplateRenderer.RenderAsync("Module.cs.scriban", model, Path.Combine(implDir, $"{name}Module.cs")),
+            TemplateRenderer.RenderAsync("ImplementationGlobalUsings.cs.scriban", model, Path.Combine(implDir, "GlobalUsings.cs")),
+            TemplateRenderer.RenderAsync("UnitTests.csproj.scriban", model, Path.Combine(unitTestsDir, $"{Prefix}.{name}.UnitTests.csproj")),
+            TemplateRenderer.RenderAsync("UnitTestsGlobalUsings.cs.scriban", model, Path.Combine(unitTestsDir, "GlobalUsings.cs")),
+            TemplateRenderer.RenderAsync("UnitTestsClass.cs.scriban", model, Path.Combine(unitTestsDir, $"{name}ModuleTests.cs")),
+            TemplateRenderer.RenderAsync("IntegrationTests.csproj.scriban", model, Path.Combine(integrationTestsDir, $"{Prefix}.{name}.IntegrationTests.csproj")),
+            TemplateRenderer.RenderAsync("IntegrationTestsGlobalUsings.cs.scriban", model, Path.Combine(integrationTestsDir, "GlobalUsings.cs")),
+            TemplateRenderer.RenderAsync("IntegrationTestsClass.cs.scriban", model, Path.Combine(integrationTestsDir, $"{name}ModuleIntegrationTests.cs")),
+            TemplateRenderer.RenderAsync("ApiFactory.cs.scriban", model, Path.Combine(integrationTestsDir, "ApiFactory.cs")));
 
         Console.WriteLine("  Generated project files.");
     }

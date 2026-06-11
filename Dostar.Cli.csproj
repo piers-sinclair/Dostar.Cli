@@ -11,8 +11,15 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dostar</ToolCommandName>
     <PackageId>Dostar.Cli</PackageId>
-    <Version>0.1.0</Version>
-    <Description>Dostar CLI — scaffold and manage Dostar modular monolith projects.</Description>
+    <Version>0.1.0</Version> <!-- x-release-please-version -->
+    <Description>Scaffold production-ready fullstack .NET + React projects with built-in Azure infrastructure, CI/CD pipelines, and DevSecOps practices baked in — so startups skip weeks of boilerplate and ship on day one.</Description>
+    <Authors>Piers Sinclair</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/piers-sinclair/Dostar</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/piers-sinclair/Dostar.Cli</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>dotnet;cli;scaffold;startup;template;modular-monolith;azure;bicep;devsecops;cicd;fullstack;react;boilerplate</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +29,10 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Templates\*.scriban" WithCulture="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>

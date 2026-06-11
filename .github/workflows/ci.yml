@@ -1,23 +1,68 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+    types: [opened, edited, synchronize, reopened]
 
 jobs:
+  pr-title:
+    name: PR title (conventional commits)
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-and-test:
+    name: Build & test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore
 
       - name: Build
-        run: dotnet build --no-incremental
+        run: dotnet build --no-restore -c Release
+
+      - name: Verify formatting
+        run: dotnet format Dostar.Cli.slnx --verify-no-changes
 
       - name: Test
-        run: dotnet test tests/Dostar.Cli.Tests --no-build
+        run: dotnet test tests/Dostar.Cli.Tests --no-build -c Release
+
+  trivy-scan:
+    name: Security — Trivy vulnerability scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Trivy
+        run: |
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+            | gpg --dearmor \
+            | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" \
+            | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update -qq
+          sudo apt-get install -y trivy
+
+      - name: Run Trivy (filesystem — NuGet)
+        # Fails on any CVE at any severity. To suppress a known/accepted
+        # vulnerability, add its CVE ID to .trivyignore at the repo root.
+        run: trivy fs --exit-code 1 .

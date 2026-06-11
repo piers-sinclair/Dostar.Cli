@@ -3,7 +3,7 @@ namespace Dostar.Cli;
 internal sealed class RemoveModuleService(string name, bool dryRun, bool yes, RepoRoot? root = null)
 {
     private readonly RepoRoot _root = root ?? RepoRoot.Find();
-    private string Prefix     => Path.GetFileNameWithoutExtension(_root.SlnxPath);
+    private string Prefix => Path.GetFileNameWithoutExtension(_root.SlnxPath);
     private string ModulesDir => Path.Combine(_root.Root, "backend", "Modules", name);
 
     internal async Task<int> RemoveAsync()
@@ -70,7 +70,7 @@ internal sealed class RemoveModuleService(string name, bool dryRun, bool yes, Re
     private void PrintPlan()
     {
         var programCsPath = Path.Combine(_root.Root, "backend", $"{Prefix}.Api", "Program.cs");
-        var implCsproj    = $"{Prefix}.{name}.Implementation";
+        var implCsproj = $"{Prefix}.{name}.Implementation";
 
         Console.WriteLine(dryRun ? "[DRY RUN] The following changes would be made:" : "The following changes will be made:");
         Console.WriteLine();
@@ -91,7 +91,7 @@ internal sealed class RemoveModuleService(string name, bool dryRun, bool yes, Re
 
     private async Task ApplyAsync()
     {
-        var apiCsprojPath  = Path.Combine(_root.Root, "backend", $"{Prefix}.Api", $"{Prefix}.Api.csproj");
+        var apiCsprojPath = Path.Combine(_root.Root, "backend", $"{Prefix}.Api", $"{Prefix}.Api.csproj");
         var implCsprojPath = Path.Combine(ModulesDir, $"{Prefix}.{name}.Implementation", $"{Prefix}.{name}.Implementation.csproj");
 
         await SolutionCli.RemoveReferenceAsync(apiCsprojPath, implCsprojPath, _root.Root);

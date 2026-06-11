@@ -16,13 +16,13 @@ public class AddModuleIntegrationTests : IDisposable
 
         Directory.Exists(modulesDir).ShouldBeTrue();
 
-        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Contracts",        $"{p}.Billing.Contracts.csproj")).ShouldBeTrue();
-        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Implementation",   $"{p}.Billing.Implementation.csproj")).ShouldBeTrue();
-        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Implementation",   "BillingModule.cs")).ShouldBeTrue();
-        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Implementation",   "GlobalUsings.cs")).ShouldBeTrue();
-        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.UnitTests",        $"{p}.Billing.UnitTests.csproj")).ShouldBeTrue();
-        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.UnitTests",        "GlobalUsings.cs")).ShouldBeTrue();
-        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.UnitTests",        "BillingModuleTests.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Contracts", $"{p}.Billing.Contracts.csproj")).ShouldBeTrue();
+        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Implementation", $"{p}.Billing.Implementation.csproj")).ShouldBeTrue();
+        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Implementation", "BillingModule.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Implementation", "GlobalUsings.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.UnitTests", $"{p}.Billing.UnitTests.csproj")).ShouldBeTrue();
+        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.UnitTests", "GlobalUsings.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.UnitTests", "BillingModuleTests.cs")).ShouldBeTrue();
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.IntegrationTests", $"{p}.Billing.IntegrationTests.csproj")).ShouldBeTrue();
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.IntegrationTests", "GlobalUsings.cs")).ShouldBeTrue();
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.IntegrationTests", "BillingModuleIntegrationTests.cs")).ShouldBeTrue();
