@@ -1,0 +1,82 @@
+namespace Dostar.Cli.Tests.Unit;
+
+public class ProjectNameSubstitutorTests
+{
+    private static string Sub(string input) =>
+        ProjectNameSubstitutor.Substitute(input, "MyApp", "myapp", "my-org");
+
+    [Fact]
+    public void Substitute_ProjectName_ReplacesDostarWithProjectName()
+    {
+        Sub("namespace Dostar.Todos").ShouldBe("namespace MyApp.Todos");
+    }
+
+    [Fact]
+    public void Substitute_ProjectNameLower_ReplacesLowercaseDostar()
+    {
+        Sub("POSTGRES_DB: dostar").ShouldBe("POSTGRES_DB: myapp");
+    }
+
+    [Fact]
+    public void Substitute_GithubOrg_ReplacesOrgAndProjectNameInRepoUrl()
+    {
+        Sub("piers-sinclair/Dostar").ShouldBe("my-org/MyApp");
+    }
+
+    [Fact]
+    public void Substitute_CliToolName_PreservesDostarCli()
+    {
+        Sub("dotnet tool install -g Dostar.Cli").ShouldBe("dotnet tool install -g Dostar.Cli");
+    }
+
+    [Fact]
+    public void Substitute_CliRepoRef_PreservesPiersSinclairDostarCli()
+    {
+        Sub("[Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli)").ShouldBe("[Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli)");
+    }
+
+    [Fact]
+    public void Substitute_CliInlineCode_PreservesBacktickDostar()
+    {
+        Sub("The `dostar` CLI tool").ShouldBe("The `dostar` CLI tool");
+    }
+
+    [Fact]
+    public void Substitute_CliNewProject_PreservesCommand()
+    {
+        Sub("dostar new-project MyStartup").ShouldBe("dostar new-project MyStartup");
+    }
+
+    [Fact]
+    public void Substitute_CliAddModule_PreservesCommand()
+    {
+        Sub("dostar add-module Products").ShouldBe("dostar add-module Products");
+    }
+
+    [Fact]
+    public void Substitute_CliRemoveModule_PreservesCommand()
+    {
+        Sub("dostar remove-module Products").ShouldBe("dostar remove-module Products");
+    }
+
+    [Fact]
+    public void Substitute_MixedContent_SubstitutesProjectNameAndPreservesCli()
+    {
+        const string input = """
+            # MyProject setup
+
+            Install: dotnet tool install -g Dostar.Cli
+            Run: dostar new-project MyStartup
+
+            namespace Dostar.Todos;
+            POSTGRES_DB: dostar
+            """;
+
+        var result = Sub(input);
+
+        result.ShouldContain("Dostar.Cli");
+        result.ShouldContain("dostar new-project");
+        result.ShouldContain("namespace MyApp.Todos");
+        result.ShouldContain("POSTGRES_DB: myapp");
+    }
+}

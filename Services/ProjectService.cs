@@ -103,17 +103,8 @@ internal sealed class ProjectService(string projectName, string? output, string 
         }
     }
 
-    private string Substitute(string input, string projectNameLower)
-    {
-        const string cliProtect = "\x01DOSTAR_CLI_REF\x01";
-        return input
-            .Replace("piers-sinclair/Dostar.Cli", cliProtect)
-            .Replace("piers-sinclair/Dostar", $"{githubOrg}/Dostar")
-            .Replace("\"piers-sinclair\"", $"\"{githubOrg}\"")
-            .Replace("Dostar", projectName, StringComparison.Ordinal)
-            .Replace("dostar", projectNameLower, StringComparison.Ordinal)
-            .Replace(cliProtect, "piers-sinclair/Dostar.Cli");
-    }
+    private string Substitute(string input, string projectNameLower) =>
+        ProjectNameSubstitutor.Substitute(input, projectName, projectNameLower, githubOrg);
 
     private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
         Path.GetRelativePath(rootDir, filePath)
