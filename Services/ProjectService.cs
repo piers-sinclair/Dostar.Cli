@@ -1,6 +1,6 @@
 namespace Dostar.Cli;
 
-internal sealed class ProjectService(string projectName, string? output, string githubOrg)
+internal sealed class ProjectService(string projectName, string? output, string githubOrg, string author)
 {
     private const string TemplateRepoUrl    = "https://github.com/piers-sinclair/Dostar.git";
     private const string GitDirectoryName   = ".git";
@@ -41,6 +41,22 @@ internal sealed class ProjectService(string projectName, string? output, string 
         var projectNameLower = projectName.ToLowerInvariant();
         RenameEntriesBottomUp(new DirectoryInfo(rootDir), projectNameLower);
         SubstituteInFiles(rootDir, projectNameLower);
+        ApplyLicenseMetadata(rootDir);
+    }
+
+    private void ApplyLicenseMetadata(string rootDir)
+    {
+        var licensePath = Path.Combine(rootDir, "LICENSE");
+        if (!File.Exists(licensePath))
+            return;
+
+        var content = File.ReadAllText(licensePath);
+        var updated = content
+            .Replace("Piers Sinclair", author)
+            .Replace("2025", DateTime.UtcNow.Year.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+        if (updated != content)
+            File.WriteAllText(licensePath, updated);
     }
 
     private void RenameEntriesBottomUp(DirectoryInfo dir, string projectNameLower)
