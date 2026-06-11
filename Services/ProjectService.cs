@@ -1,6 +1,6 @@
 namespace Dostar.Cli;
 
-internal sealed class ProjectService(string projectName, string? output, string? githubOrg = null)
+internal sealed class ProjectService(string projectName, string? output, string githubOrg)
 {
     private const string TemplateRepoUrl    = "https://github.com/piers-sinclair/Dostar.git";
     private const string GitDirectoryName   = ".git";
@@ -87,11 +87,19 @@ internal sealed class ProjectService(string projectName, string? output, string?
         }
     }
 
-    private string Substitute(string input, string projectNameLower) =>
-        input
+    private string Substitute(string input, string projectNameLower)
+    {
+        // Protect "piers-sinclair/Dostar.Cli" before URL replacement — the ".Cli" suffix makes
+        // it a substring of "piers-sinclair/Dostar", so a naive replace would corrupt it.
+        const string cliProtect = "\x01DOSTAR_CLI_REF\x01";
+        return input
+            .Replace("piers-sinclair/Dostar.Cli", cliProtect)
+            .Replace("piers-sinclair/Dostar", $"{githubOrg}/Dostar")   // project repo URLs
+            .Replace("\"piers-sinclair\"", $"\"{githubOrg}\"")          // dependabot YAML values
             .Replace("Dostar", projectName, StringComparison.Ordinal)
             .Replace("dostar", projectNameLower, StringComparison.Ordinal)
-            .Replace("__GITHUB_ORG__", githubOrg ?? "__GITHUB_ORG__", StringComparison.Ordinal);
+            .Replace(cliProtect, "piers-sinclair/Dostar.Cli");          // restore CLI tool ref
+    }
 
     private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
         Path.GetRelativePath(rootDir, filePath)

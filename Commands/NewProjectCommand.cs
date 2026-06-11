@@ -15,9 +15,10 @@ internal static class NewProjectCommand
         };
         outputOption.Aliases.Add("-o");
 
-        var ownerOption = new Option<string?>("--owner")
+        var ownerOption = new Option<string>("--owner")
         {
-            Description = "GitHub organisation or username that will own the repo (e.g. acme-corp). Replaces placeholder URLs in README badges, Bicep parameters, and dependabot config."
+            Description = "GitHub organisation or username that will own the repo (e.g. acme-corp). Replaces the template author's GitHub identity in README badges, Bicep repositoryUrl, dependabot assignees/reviewers, and the create-issue skill.",
+            Required = true,
         };
 
         var command = new Command("new-project", "Bootstrap a new project from the Dostar template");
@@ -28,12 +29,12 @@ internal static class NewProjectCommand
         command.SetAction((parseResult, _) => HandleAsync(
             parseResult.GetValue(nameArg)!,
             parseResult.GetValue(outputOption),
-            parseResult.GetValue(ownerOption)));
+            parseResult.GetValue(ownerOption)!));
 
         return command;
     }
 
-    private static async Task<int> HandleAsync(string projectName, string? output, string? owner)
+    private static async Task<int> HandleAsync(string projectName, string? output, string owner)
     {
         if (!projectName.IsPascalCase())
         {
@@ -55,15 +56,6 @@ internal static class NewProjectCommand
             Console.WriteLine("  git init && git add . && git commit -m \"Initial commit\"");
             Console.WriteLine("  dotnet build");
             Console.WriteLine("  cd frontend && pnpm dev");
-
-            if (owner is null)
-            {
-                Console.WriteLine();
-                Console.WriteLine("Note: GitHub URLs were not updated (--owner was not provided).");
-                Console.WriteLine("      Search for '__GITHUB_ORG__' across the project and replace with your");
-                Console.WriteLine("      GitHub organisation or username before pushing.");
-            }
-
             return 0;
         }
         catch (InvalidOperationException ex)
