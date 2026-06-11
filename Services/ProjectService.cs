@@ -1,6 +1,6 @@
 namespace Dostar.Cli;
 
-internal sealed class ProjectService(string projectName, string? output)
+internal sealed class ProjectService(string projectName, string? output, string? githubOrg = null)
 {
     private const string TemplateRepoUrl    = "https://github.com/piers-sinclair/Dostar.git";
     private const string GitDirectoryName   = ".git";
@@ -90,7 +90,8 @@ internal sealed class ProjectService(string projectName, string? output)
     private string Substitute(string input, string projectNameLower) =>
         input
             .Replace("Dostar", projectName, StringComparison.Ordinal)
-            .Replace("dostar", projectNameLower, StringComparison.Ordinal);
+            .Replace("dostar", projectNameLower, StringComparison.Ordinal)
+            .Replace("__GITHUB_ORG__", githubOrg ?? "__GITHUB_ORG__", StringComparison.Ordinal);
 
     private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
         Path.GetRelativePath(rootDir, filePath)
