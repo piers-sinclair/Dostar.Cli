@@ -60,9 +60,9 @@ internal static class NewProjectCommand
             Console.WriteLine($"Project '{projectName}' created successfully at '{outputDir}'.");
             Console.WriteLine();
             Console.WriteLine("Next steps:");
-            Console.WriteLine($"  1. Open the '{projectName}' folder in VS Code");
-            Console.WriteLine("  2. When prompted, select \"Reopen in Container\" to start the Dev Container");
-            Console.WriteLine("  3. Read README.md inside the container for full setup and usage instructions");
+            Console.WriteLine($"  cd {projectName}");
+            Console.WriteLine("  code .        # VS Code will prompt \"Reopen in Container\" — click it");
+            Console.WriteLine("  # Then read README.md for full setup instructions");
             return 0;
         }
         catch (InvalidOperationException ex)
