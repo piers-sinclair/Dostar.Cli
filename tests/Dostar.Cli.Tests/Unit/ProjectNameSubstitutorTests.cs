@@ -60,6 +60,12 @@ public class ProjectNameSubstitutorTests
     }
 
     [Fact]
+    public void Substitute_BicepParamWorkload_ReplacesWithProjectNameLower()
+    {
+        Sub("param workload = 'dostar'").ShouldBe("param workload = 'myapp'");
+    }
+
+    [Fact]
     public void Substitute_MixedContent_SubstitutesProjectNameAndPreservesCli()
     {
         const string input = """
