@@ -36,6 +36,9 @@ internal sealed class ProjectService(string projectName, string? output, string 
         Console.WriteLine("Resetting changelog and version...");
         ResetVersioning(outputDir);
 
+        Console.WriteLine("Cleaning up template-specific documentation...");
+        CleanClaudeMd(outputDir);
+
         return outputDir;
     }
 
@@ -118,6 +121,39 @@ internal sealed class ProjectService(string projectName, string? output, string 
         var manifestPath = Path.Combine(rootDir, ".release-please-manifest.json");
         if (File.Exists(manifestPath))
             File.WriteAllText(manifestPath, "{\n  \".\": \"0.0.0\"\n}\n");
+    }
+
+    private static void CleanClaudeMd(string rootDir)
+    {
+        var claudeMdPath = Path.Combine(rootDir, "CLAUDE.md");
+        if (!File.Exists(claudeMdPath))
+            return;
+
+        var lines = File.ReadAllLines(claudeMdPath).ToList();
+
+        var blockStart = lines.FindIndex(l => l.StartsWith("> **Cross-repo dependency:**", StringComparison.Ordinal));
+        if (blockStart == -1)
+            return;
+
+        var blockEnd = blockStart + 1;
+        while (blockEnd < lines.Count && lines[blockEnd].StartsWith('>'))
+            blockEnd++;
+
+        lines.RemoveRange(blockStart, blockEnd - blockStart);
+
+        // Collapse any double blank lines left behind
+        var result = new List<string>(lines.Count);
+        var prevBlank = false;
+        foreach (var line in lines)
+        {
+            var isBlank = string.IsNullOrWhiteSpace(line);
+            if (isBlank && prevBlank)
+                continue;
+            result.Add(line);
+            prevBlank = isBlank;
+        }
+
+        File.WriteAllLines(claudeMdPath, result);
     }
 
     private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
