@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { default{{ name }}Items } from '@/features/{{ name_lower }}/mocks/handlers';
+import { default{{ name }}Items } from '@/features/{{ name_kebab }}/mocks/handlers';
 import { renderWithProviders } from '@/test/utils';
 import { {{ name }}List } from './{{ name }}List';
 

@@ -44,6 +44,27 @@ public class AddFeatureIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task AddAsync_MultiWordFeature_CreatesFolderWithKebabCase()
+    {
+        await new AddFeatureService("UserManagement", _repo.RepoRoot).AddAsync();
+
+        var featureDir = _repo.FeaturesDir("UserManagement");
+
+        Directory.Exists(featureDir).ShouldBeTrue();
+        featureDir.ShouldEndWith("user-management");
+
+        var componentContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "components", "UserManagementList.tsx"));
+        var hookContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "hooks", "useUserManagement.ts"));
+        var handlersContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "mocks", "handlers.ts"));
+
+        componentContent.ShouldContain("@/features/user-management/hooks/useUserManagement");
+        hookContent.ShouldContain("USER_MANAGEMENT_API_PATH");
+        hookContent.ShouldContain("/api/v1/user-management");
+        handlersContent.ShouldContain("USER_MANAGEMENT_URL");
+        handlersContent.ShouldContain("/api/v1/user-management");
+    }
+
+    [Fact]
     public async Task AddAsync_AlreadyExists_ReturnsFalse()
     {
         var service = new AddFeatureService("Billing", _repo.RepoRoot);

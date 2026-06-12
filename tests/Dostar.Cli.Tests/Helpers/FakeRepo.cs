@@ -54,7 +54,7 @@ internal sealed class FakeRepo : IDisposable
         Path.Combine(Root, "backend", "Modules", moduleName);
 
     internal string FeaturesDir(string featureName) =>
-        Path.Combine(Root, "frontend", "src", "features", featureName.ToLowerInvariant());
+        Path.Combine(Root, "frontend", "src", "features", featureName.ToKebabCase());
 
     internal void CreateFeatureDir(string featureName) =>
         Directory.CreateDirectory(FeaturesDir(featureName));

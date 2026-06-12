@@ -1,12 +1,12 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { apiClient } from '@/shared/api/client';
 
-const {{ name_upper }}_API_PATH = '/api/v1/{{ name_lower }}';
-const {{ name_upper }}_QUERY_KEY = ['{{ name_lower }}'] as const;
+const {{ name_screaming }}_API_PATH = '/api/v1/{{ name_kebab }}';
+const {{ name_screaming }}_QUERY_KEY = ['{{ name_kebab }}'] as const;
 
 export function use{{ name }}(): UseQueryResult<unknown[], Error> {
     return useQuery<unknown[], Error>({
-        queryKey: {{ name_upper }}_QUERY_KEY,
-        queryFn: () => apiClient<unknown[]>({{ name_upper }}_API_PATH),
+        queryKey: {{ name_screaming }}_QUERY_KEY,
+        queryFn: () => apiClient<unknown[]>({{ name_screaming }}_API_PATH),
     });
 }

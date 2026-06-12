@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { getApiError } from '@/shared/lib/getApiError';
-import { use{{ name }} } from '@/features/{{ name_lower }}/hooks/use{{ name }}';
+import { use{{ name }} } from '@/features/{{ name_kebab }}/hooks/use{{ name }}';
 
 export function {{ name }}List(): JSX.Element {
     const { data: items, isLoading, error } = use{{ name }}();
