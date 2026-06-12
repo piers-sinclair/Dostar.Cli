@@ -47,7 +47,7 @@ dostar add-module <ModuleName>                # scaffold backend Contracts/Imple
 dostar add-module <ModuleName> --no-endpoints # scaffold as IModule (no HTTP endpoints)
 dostar remove-module <ModuleName>             # remove backend module + solution/Program.cs cleanup
 dostar add-feature <FeatureName>              # scaffold frontend/src/features/<name>/ (planned)
-dostar remove-feature <FeatureName>           # delete frontend/src/features/<name>/ (planned)
+dostar remove-feature <FeatureName>           # delete frontend/src/features/<name>/
 ```
 
 Backend modules (`add-module`/`remove-module`) and frontend features (`add-feature`/`remove-feature`) are
