@@ -1,6 +1,6 @@
 # Dostar.Cli — Claude Code Context
 
-`dostar` is a .NET 10 global tool (System.CommandLine) for scaffolding and managing [Dostar](https://github.com/piers-sinclair/Dostar) modular monolith projects.
+`dostar` is the CLI companion to [Dostar](https://github.com/piers-sinclair/Dostar) — a fullstack template built around exceptional developer experience, complete DevSecOps, and CI/CD to production in under 30 minutes. Built with .NET 10 + System.CommandLine, it handles project creation and module scaffolding so teams skip straight to building features.
 
 ---
 
