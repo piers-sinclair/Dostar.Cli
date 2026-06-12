@@ -46,7 +46,7 @@ dostar new-project <ProjectName>              # clone Dostar template and rename
 dostar add-module <ModuleName>                # scaffold backend Contracts/Implementation/UnitTests/IntegrationTests
 dostar add-module <ModuleName> --no-endpoints # scaffold as IModule (no HTTP endpoints)
 dostar remove-module <ModuleName>             # remove backend module + solution/Program.cs cleanup
-dostar add-feature <FeatureName>              # scaffold frontend/src/features/<name>/ (planned)
+dostar add-feature <FeatureName>              # scaffold frontend/src/features/<name>/
 dostar remove-feature <FeatureName>           # delete frontend/src/features/<name>/
 ```
 

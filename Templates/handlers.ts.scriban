@@ -1,0 +1,11 @@
+import { http, HttpResponse } from 'msw';
+
+const BASE = 'http://localhost';
+export const {{ name_screaming }}_URL = `${BASE}/api/v1/{{ name_kebab }}`;
+export const {{ name_screaming }}_BY_ID_URL = `${BASE}/api/v1/{{ name_kebab }}/:id`;
+
+export const default{{ name }}Items: unknown[] = [];
+
+export const handlers = [
+    http.get({{ name_screaming }}_URL, () => HttpResponse.json(default{{ name }}Items)),
+];
