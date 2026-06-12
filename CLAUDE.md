@@ -43,9 +43,16 @@ CLAUDE.md                ← this file
 
 ```bash
 dostar new-project <ProjectName>              # clone Dostar template and rename references
-dostar add-module <ModuleName>                # scaffold Contracts/Implementation/UnitTests/IntegrationTests
+dostar add-module <ModuleName>                # scaffold backend Contracts/Implementation/UnitTests/IntegrationTests
 dostar add-module <ModuleName> --no-endpoints # scaffold as IModule (no HTTP endpoints)
+dostar remove-module <ModuleName>             # remove backend module + solution/Program.cs cleanup
+dostar add-feature <FeatureName>              # scaffold frontend/src/features/<name>/ (planned)
+dostar remove-feature <FeatureName>           # delete frontend/src/features/<name>/ (planned)
 ```
+
+Backend modules (`add-module`/`remove-module`) and frontend features (`add-feature`/`remove-feature`) are
+intentionally separate commands — a backend module does not always have a corresponding frontend feature,
+and vice versa.
 
 ---
 

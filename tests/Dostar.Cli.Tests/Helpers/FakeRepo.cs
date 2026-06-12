@@ -49,9 +49,6 @@ internal sealed class FakeRepo : IDisposable
     internal string ModulesDir(string moduleName) =>
         Path.Combine(Root, "backend", "Modules", moduleName);
 
-    internal string FrontendFeaturesDir(string moduleName) =>
-        Path.Combine(Root, "frontend", "src", "features", moduleName.ToLowerInvariant());
-
     internal string ProgramCs =>
         Path.Combine(Root, "backend", $"{Prefix}.Api", "Program.cs");
 
