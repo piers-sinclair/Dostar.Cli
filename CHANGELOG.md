@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.3.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.2.1...v0.3.0) (2026-06-12)
+
+
+### Features
+
+* add add-feature command to scaffold frontend feature folder ([#31](https://github.com/piers-sinclair/Dostar.Cli/issues/31)) ([31d87da](https://github.com/piers-sinclair/Dostar.Cli/commit/31d87da4bf9c677406058da47c5bd891f057f4ab))
+* add remove-feature command to delete frontend feature folder ([#30](https://github.com/piers-sinclair/Dostar.Cli/issues/30)) ([a1c6b48](https://github.com/piers-sinclair/Dostar.Cli/commit/a1c6b4887d336c3fd8131f213e5a9f65d1431d87)), closes [#29](https://github.com/piers-sinclair/Dostar.Cli/issues/29)
+* remove frontend feature folder when removing a module ([#27](https://github.com/piers-sinclair/Dostar.Cli/issues/27)) ([b91c0a7](https://github.com/piers-sinclair/Dostar.Cli/commit/b91c0a7f3dddf0cb94a43c130ef578cdc12d84e6))
+
+
+### Bug Fixes
+
+* **ci:** make path-filtered CI checks always report to satisfy required checks ([#22](https://github.com/piers-sinclair/Dostar.Cli/issues/22)) ([3b0e760](https://github.com/piers-sinclair/Dostar.Cli/commit/3b0e760e0b9cc66cdcb2540a3706b67639f9a125)), closes [#16](https://github.com/piers-sinclair/Dostar.Cli/issues/16)
+* reset CHANGELOG.md and version on new-project ([#23](https://github.com/piers-sinclair/Dostar.Cli/issues/23)) ([98da839](https://github.com/piers-sinclair/Dostar.Cli/commit/98da8390a2bb759f9b9ed601105f2ef51bef9fe3)), closes [#17](https://github.com/piers-sinclair/Dostar.Cli/issues/17)
+* strip cross-repo dependency section from CLAUDE.md on new-project ([#24](https://github.com/piers-sinclair/Dostar.Cli/issues/24)) ([b052153](https://github.com/piers-sinclair/Dostar.Cli/commit/b0521538f4ad65b745452bb25f9885439784e34c))
+* **templates:** align add-module output with current Todos module conventions ([#16](https://github.com/piers-sinclair/Dostar.Cli/issues/16)) ([f2b8f30](https://github.com/piers-sinclair/Dostar.Cli/commit/f2b8f300eba244442cda4106baa2d1401eb1f408))
+
+
+### Documentation
+
+* clarify Dostar's three core goals in README and CLAUDE.md ([#20](https://github.com/piers-sinclair/Dostar.Cli/issues/20)) ([a46e12a](https://github.com/piers-sinclair/Dostar.Cli/commit/a46e12a129b3d80150d5198b02ee1c2825aec2c2))
+
 ## [0.2.1](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.2.0...v0.2.1) (2026-06-11)
 
 
