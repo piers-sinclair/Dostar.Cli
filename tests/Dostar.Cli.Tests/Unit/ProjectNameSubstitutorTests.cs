@@ -66,6 +66,20 @@ public class ProjectNameSubstitutorTests
     }
 
     [Fact]
+    public void Substitute_NoSubstituteAnnotation_LeavesEntireLineUnchanged()
+    {
+        const string input = """
+            check_tool "dostar"  "dotnet tool install -g Dostar.Cli"  dostar --version  # @no-substitute
+            POSTGRES_DB: dostar
+            """;
+
+        var result = Sub(input);
+
+        result.ShouldContain("check_tool \"dostar\"  \"dotnet tool install -g Dostar.Cli\"  dostar --version  # @no-substitute");
+        result.ShouldContain("POSTGRES_DB: myapp");
+    }
+
+    [Fact]
     public void Substitute_MixedContent_SubstitutesProjectNameAndPreservesCli()
     {
         const string input = """

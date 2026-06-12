@@ -11,7 +11,22 @@ internal static class ProjectNameSubstitutor
     private const string PCliAdd = "\x01CLI_ADD\x01";    // dostar add-module
     private const string PCliRemove = "\x01CLI_REM\x01";    // dostar remove-module
 
-    internal static string Substitute(string input, string projectName, string projectNameLower, string githubOrg) =>
+    internal static string Substitute(string input, string projectName, string projectNameLower, string githubOrg)
+    {
+        if (!input.Contains("@no-substitute", StringComparison.Ordinal))
+            return ApplySubstitutions(input, projectName, projectNameLower, githubOrg);
+
+        // Lines annotated with @no-substitute are left unchanged (e.g. external tool references in shell scripts)
+        var lines = input.Split('\n');
+        for (var i = 0; i < lines.Length; i++)
+        {
+            if (!lines[i].Contains("@no-substitute", StringComparison.Ordinal))
+                lines[i] = ApplySubstitutions(lines[i], projectName, projectNameLower, githubOrg);
+        }
+        return string.Join('\n', lines);
+    }
+
+    private static string ApplySubstitutions(string input, string projectName, string projectNameLower, string githubOrg) =>
         input
             // Protect CLI tool references — longest/most-specific patterns first so shorter ones
             // don't partially match before the longer ones are replaced
