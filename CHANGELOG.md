@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.3.0...v0.4.0) (2026-06-12)
+
+
+### Features
+
+* add [@no-substitute](https://github.com/no-substitute) line annotation to ProjectNameSubstitutor ([#32](https://github.com/piers-sinclair/Dostar.Cli/issues/32)) ([3674612](https://github.com/piers-sinclair/Dostar.Cli/commit/36746124aa7d8e18df7a44ea0aae0f0036cfd924))
+
 ## [0.3.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.2.1...v0.3.0) (2026-06-12)
 
 
