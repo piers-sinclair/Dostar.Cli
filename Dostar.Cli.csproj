@@ -11,7 +11,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dostar</ToolCommandName>
     <PackageId>Dostar.Cli</PackageId>
-    <Version>0.2.0</Version> <!-- x-release-please-version -->
+    <Version>0.2.1</Version> <!-- x-release-please-version -->
     <Description>Scaffold production-ready fullstack .NET + React projects with built-in Azure infrastructure, CI/CD pipelines, and DevSecOps practices baked in — so startups skip weeks of boilerplate and ship on day one.</Description>
     <Authors>Piers Sinclair</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
