@@ -33,6 +33,9 @@ internal sealed class ProjectService(string projectName, string? output, string 
         ApplyProjectName(outputDir);
         Console.WriteLine("Renaming complete.");
 
+        Console.WriteLine("Resetting changelog and version...");
+        ResetVersioning(outputDir);
+
         return outputDir;
     }
 
@@ -105,6 +108,17 @@ internal sealed class ProjectService(string projectName, string? output, string 
 
     private string Substitute(string input, string projectNameLower) =>
         ProjectNameSubstitutor.Substitute(input, projectName, projectNameLower, githubOrg);
+
+    private static void ResetVersioning(string rootDir)
+    {
+        var changelogPath = Path.Combine(rootDir, "CHANGELOG.md");
+        if (File.Exists(changelogPath))
+            File.WriteAllText(changelogPath, "# Changelog\n");
+
+        var manifestPath = Path.Combine(rootDir, ".release-please-manifest.json");
+        if (File.Exists(manifestPath))
+            File.WriteAllText(manifestPath, "{\n  \".\": \"0.0.0\"\n}\n");
+    }
 
     private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
         Path.GetRelativePath(rootDir, filePath)
