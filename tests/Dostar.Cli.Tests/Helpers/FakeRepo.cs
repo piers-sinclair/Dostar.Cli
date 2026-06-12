@@ -9,6 +9,9 @@ namespace Dostar.Cli.Tests.Helpers;
 ///       {Prefix}.Api/
 ///         {Prefix}.Api.csproj
 ///         Program.cs
+///     frontend/
+///       src/
+///         features/
 /// </summary>
 internal sealed class FakeRepo : IDisposable
 {
@@ -24,6 +27,7 @@ internal sealed class FakeRepo : IDisposable
         var apiDir = Path.Combine(Root, "backend", $"{Prefix}.Api");
 
         Directory.CreateDirectory(apiDir);
+        Directory.CreateDirectory(Path.Combine(Root, "frontend", "src", "features"));
 
         SlnxPath = Path.Combine(Root, $"{Prefix}.slnx");
         File.WriteAllText(SlnxPath, "<Solution>\n</Solution>\n");
@@ -48,6 +52,12 @@ internal sealed class FakeRepo : IDisposable
 
     internal string ModulesDir(string moduleName) =>
         Path.Combine(Root, "backend", "Modules", moduleName);
+
+    internal string FeaturesDir(string featureName) =>
+        Path.Combine(Root, "frontend", "src", "features", featureName.ToLowerInvariant());
+
+    internal void CreateFeatureDir(string featureName) =>
+        Directory.CreateDirectory(FeaturesDir(featureName));
 
     internal string ProgramCs =>
         Path.Combine(Root, "backend", $"{Prefix}.Api", "Program.cs");
