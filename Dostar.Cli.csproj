@@ -12,7 +12,7 @@
     <ToolCommandName>dostar</ToolCommandName>
     <PackageId>Dostar.Cli</PackageId>
     <Version>0.2.1</Version> <!-- x-release-please-version -->
-    <Description>Scaffold production-ready fullstack .NET + React projects with built-in Azure infrastructure, CI/CD pipelines, and DevSecOps practices baked in — so startups skip weeks of boilerplate and ship on day one.</Description>
+    <Description>CLI for the Dostar fullstack template (.NET modular monolith + React/Vite). Scaffold production-ready projects with exceptional developer experience, complete DevSecOps, and CI/CD that deploys to production in under 30 minutes.</Description>
     <Authors>Piers Sinclair</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/piers-sinclair/Dostar</PackageProjectUrl>

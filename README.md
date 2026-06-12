@@ -1,6 +1,10 @@
 # Dostar CLI (`dostar`)
 
-The `dostar` CLI is a .NET global tool for scaffolding and managing [Dostar](https://github.com/piers-sinclair/Dostar) modular monolith projects.
+The `dostar` CLI is the entry point to [Dostar](https://github.com/piers-sinclair/Dostar) — a fullstack template built around exceptional developer experience, complete DevSecOps, and CI/CD that deploys to production in under 30 minutes. The CLI handles project creation and module scaffolding so your team skips straight to building features:
+
+- `dostar new-project` — clone the template and rename every token in one step
+- `dostar add-module` — scaffold a new feature module (Contracts, Implementation, tests)
+- `dostar remove-module` — cleanly remove a module and its references
 
 ## Install
 
