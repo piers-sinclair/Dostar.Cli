@@ -3,7 +3,7 @@ namespace Dostar.Cli;
 internal sealed class RemoveFeatureService(string name, bool dryRun, bool yes, RepoRoot? root = null)
 {
     private readonly RepoRoot _root = root ?? RepoRoot.Find();
-    private string FeatureDir => Path.Combine(_root.Root, "frontend", "src", "features", name.ToLowerInvariant());
+    private string FeatureDir => Path.Combine(_root.Root, "frontend", "src", "features", name.ToKebabCase());
 
     internal Task<int> RemoveAsync()
     {

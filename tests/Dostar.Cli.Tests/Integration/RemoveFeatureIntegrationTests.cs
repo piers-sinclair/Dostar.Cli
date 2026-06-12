@@ -45,13 +45,13 @@ public class RemoveFeatureIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task RemoveAsync_NameIsCaseInsensitive_DeletesLowercaseDirectory()
+    public async Task RemoveAsync_MultiWordFeature_DeletesKebabCaseDirectory()
     {
-        _repo.CreateFeatureDir("Billing");
+        _repo.CreateFeatureDir("UserManagement");
 
-        await new RemoveFeatureService("BILLING", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
+        await new RemoveFeatureService("UserManagement", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
 
-        Directory.Exists(_repo.FeaturesDir("billing")).ShouldBeFalse();
+        Directory.Exists(_repo.FeaturesDir("UserManagement")).ShouldBeFalse();
     }
 
     public void Dispose()
