@@ -37,6 +37,28 @@ public class RemoveModuleIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task RemoveAsync_AfterAdd_WhenFrontendFolderExists_DeletesFrontendFeatureFolder()
+    {
+        await new AddModuleService("Billing", endpoints: true, _repo.RepoRoot).AddAsync();
+        Directory.CreateDirectory(_repo.FrontendFeaturesDir("Billing"));
+
+        await new RemoveModuleService("Billing", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
+
+        Directory.Exists(_repo.FrontendFeaturesDir("Billing")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task RemoveAsync_AfterAdd_WhenFrontendFolderAbsent_Succeeds()
+    {
+        await new AddModuleService("Billing", endpoints: true, _repo.RepoRoot).AddAsync();
+
+        var result = await new RemoveModuleService("Billing", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
+
+        result.ShouldBe(0);
+        Directory.Exists(_repo.ModulesDir("Billing")).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task RemoveAsync_DryRun_LeavesFilesIntact()
     {
         await new AddModuleService("Billing", endpoints: true, _repo.RepoRoot).AddAsync();

@@ -5,6 +5,7 @@ internal sealed class RemoveModuleService(string name, bool dryRun, bool yes, Re
     private readonly RepoRoot _root = root ?? RepoRoot.Find();
     private string Prefix => Path.GetFileNameWithoutExtension(_root.SlnxPath);
     private string ModulesDir => Path.Combine(_root.Root, "backend", "Modules", name);
+    private string FrontendFeaturesDir => Path.Combine(_root.Root, "frontend", "src", "features", name.ToLowerInvariant());
 
     internal async Task<int> RemoveAsync()
     {
@@ -79,6 +80,10 @@ internal sealed class RemoveModuleService(string name, bool dryRun, bool yes, Re
             Console.WriteLine($"  Remove from solution:          {Path.GetRelativePath(_root.Root, proj)}");
         Console.WriteLine($"  Remove project reference:      {Prefix}.Api -> {implCsproj}");
         Console.WriteLine($"  Remove module registration:    new {name}Module() from {Path.GetRelativePath(_root.Root, programCsPath)}");
+        if (Directory.Exists(FrontendFeaturesDir))
+            Console.WriteLine($"  Remove frontend feature folder: {FrontendFeaturesDir}");
+        else
+            Console.WriteLine($"  Frontend feature folder not found — will skip: {FrontendFeaturesDir}");
         Console.WriteLine();
     }
 
@@ -99,6 +104,15 @@ internal sealed class RemoveModuleService(string name, bool dryRun, bool yes, Re
         UnregisterModuleAsync();
         Directory.Delete(ModulesDir, recursive: true);
         Console.WriteLine($"  Deleted: {ModulesDir}");
+        if (Directory.Exists(FrontendFeaturesDir))
+        {
+            Directory.Delete(FrontendFeaturesDir, recursive: true);
+            Console.WriteLine($"  Deleted: {FrontendFeaturesDir}");
+        }
+        else
+        {
+            Console.WriteLine($"  No frontend feature folder found at {FrontendFeaturesDir} — skipped.");
+        }
     }
 
     private void UnregisterModuleAsync()
