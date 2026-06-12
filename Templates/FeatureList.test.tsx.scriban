@@ -1,0 +1,12 @@
+import { screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { renderWithProviders } from '@/test/utils';
+import { {{ name }}List } from './{{ name }}List';
+
+describe('{{ name }}List', () => {
+    it('shows a loading indicator while fetching', () => {
+        renderWithProviders(<{{ name }}List />);
+
+        expect(screen.getByText('Loading…')).toBeInTheDocument();
+    });
+});

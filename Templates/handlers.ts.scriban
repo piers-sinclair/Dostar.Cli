@@ -1,0 +1,9 @@
+import { http, HttpResponse } from 'msw';
+
+const BASE = 'http://localhost';
+export const {{ name_upper }}_URL = `${BASE}/api/v1/{{ name_lower }}`;
+export const {{ name_upper }}_BY_ID_URL = `${BASE}/api/v1/{{ name_lower }}/:id`;
+
+export const handlers = [
+    http.get({{ name_upper }}_URL, () => HttpResponse.json([])),
+];
