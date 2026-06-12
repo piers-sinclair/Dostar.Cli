@@ -3,11 +3,11 @@ namespace {{ prefix }}.{{ name }}.UnitTests;
 public class {{ name }}ModuleTests
 {
     [Fact]
-    public void RegisterServices_DoesNotThrow()
+    public void RegisterServices_WhenCollectionIsEmpty_DoesNotThrow()
     {
         var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
         var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
-        var module = new {{ prefix }}.{{ name }}.Implementation.{{ name }}Module();
+        var module = new {{ name }}Module();
 
         var exception = Record.Exception(() => module.RegisterServices(services, config));
 
