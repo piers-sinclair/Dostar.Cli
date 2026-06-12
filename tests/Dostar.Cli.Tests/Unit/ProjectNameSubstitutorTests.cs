@@ -62,8 +62,7 @@ public class ProjectNameSubstitutorTests
     [Fact]
     public void Substitute_BicepParamWorkload_ReplacesWithProjectNameLower()
     {
-        ProjectNameSubstitutor.Substitute("param workload = 'dostar'", "MyApp", "myapp", "my-org")
-            .ShouldBe("param workload = 'myapp'");
+        Sub("param workload = 'dostar'").ShouldBe("param workload = 'myapp'");
     }
 
     [Fact]

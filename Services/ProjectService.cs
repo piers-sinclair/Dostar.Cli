@@ -10,7 +10,7 @@ internal sealed class ProjectService(string projectName, string? output, string 
         ".cs", ".csproj", ".slnx", ".sln", ".json", ".xml", ".config", ".yaml", ".yml",
         ".md", ".txt", ".sh", ".ps1", ".ts", ".tsx", ".js", ".jsx", ".html", ".css",
         ".scss", ".env", ".gitignore", ".gitattributes", ".editorconfig", ".props",
-        ".targets", ".bicep", ".http", ".razor", ".cshtml", ".toml"
+        ".targets", ".bicep", ".bicepparam", ".http", ".razor", ".cshtml", ".toml"
     ];
 
     internal async Task<string> CreateAsync()
