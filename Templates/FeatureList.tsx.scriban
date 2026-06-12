@@ -16,8 +16,8 @@ export function {{ name }}List(): JSX.Element {
                 {isLoading && <p className="text-muted-foreground">Loading…</p>}
                 {errorMessage && <p className="text-destructive">{errorMessage}</p>}
                 <ul className="space-y-2">
-                    {items?.map((item, i) => (
-                        <li key={i}>{JSON.stringify(item)}</li>
+                    {items?.map((item) => (
+                        <li key={JSON.stringify(item)}>{JSON.stringify(item)}</li>
                     ))}
                 </ul>
             </CardContent>
