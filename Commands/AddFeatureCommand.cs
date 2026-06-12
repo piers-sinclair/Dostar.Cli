@@ -33,7 +33,7 @@ internal static class AddFeatureCommand
         Console.WriteLine($"Feature '{name}' scaffolded successfully.");
         Console.WriteLine(" Next steps:");
         Console.WriteLine($" - Replace 'unknown[]' in hooks/use{name}.ts with your real API response type");
-        Console.WriteLine($" - Import the handlers from features/{name.ToLowerInvariant()}/mocks/handlers.ts into frontend/src/test/msw/handlers.ts");
+        Console.WriteLine($" - Add typed test fixtures to mocks/handlers.ts (see todos feature for an example)");
         Console.WriteLine(" - Implement your components");
         return 0;
     }

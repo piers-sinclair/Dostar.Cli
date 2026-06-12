@@ -27,16 +27,20 @@ public class AddFeatureIntegrationTests : IDisposable
 
         var featureDir = _repo.FeaturesDir("Billing");
         var componentContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "components", "BillingList.tsx"));
+        var testContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "components", "BillingList.test.tsx"));
         var hookContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "hooks", "useBilling.ts"));
         var handlersContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "mocks", "handlers.ts"));
 
         componentContent.ShouldContain("@/features/billing/hooks/useBilling");
         componentContent.ShouldContain("@/shared/components/ui/card");
+        testContent.ShouldContain("defaultBillingItems");
+        testContent.ShouldContain("@/features/billing/mocks/handlers");
         hookContent.ShouldContain("BILLING_API_PATH");
         hookContent.ShouldContain("BILLING_QUERY_KEY");
         hookContent.ShouldContain("/api/v1/billing");
         handlersContent.ShouldContain("BILLING_URL");
         handlersContent.ShouldContain("/api/v1/billing");
+        handlersContent.ShouldContain("defaultBillingItems");
     }
 
     [Fact]
