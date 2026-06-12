@@ -141,7 +141,6 @@ internal sealed class ProjectService(string projectName, string? output, string 
 
         lines.RemoveRange(blockStart, blockEnd - blockStart);
 
-        // Collapse any double blank lines left behind
         var result = new List<string>(lines.Count);
         var prevBlank = false;
         foreach (var line in lines)
