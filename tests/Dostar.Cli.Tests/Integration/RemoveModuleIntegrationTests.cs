@@ -46,43 +46,6 @@ public class RemoveModuleIntegrationTests : IDisposable
         Directory.Exists(_repo.ModulesDir("Billing")).ShouldBeTrue();
     }
 
-    [Fact]
-    public async Task RemoveAsync_WithFrontendFeature_DeletesFeatureDir()
-    {
-        await new AddModuleService("Todos", endpoints: true, _repo.RepoRoot).AddAsync();
-        _repo.CreateFeatureDir("Todos");
-
-        await new RemoveModuleService("Todos", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
-
-        Directory.Exists(_repo.FeaturesDir("Todos")).ShouldBeFalse();
-    }
-
-    [Fact]
-    public async Task RemoveAsync_WithFrontendFeature_ResetsIndexRoute()
-    {
-        await new AddModuleService("Todos", endpoints: true, _repo.RepoRoot).AddAsync();
-        _repo.CreateFeatureDir("Todos");
-
-        await new RemoveModuleService("Todos", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
-
-        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
-        indexRoute.ShouldNotContain("@/features/todos/");
-        indexRoute.ShouldNotContain("TodoList");
-    }
-
-    [Fact]
-    public async Task RemoveAsync_DryRun_LeavesFrontendIntact()
-    {
-        await new AddModuleService("Todos", endpoints: true, _repo.RepoRoot).AddAsync();
-        _repo.CreateFeatureDir("Todos");
-
-        await new RemoveModuleService("Todos", dryRun: true, yes: true, _repo.RepoRoot).RemoveAsync();
-
-        Directory.Exists(_repo.FeaturesDir("Todos")).ShouldBeTrue();
-        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
-        indexRoute.ShouldContain("@/features/todos/");
-    }
-
     public void Dispose()
     {
         _repo.Dispose();

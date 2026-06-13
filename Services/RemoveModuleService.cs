@@ -5,22 +5,6 @@ internal sealed class RemoveModuleService(string name, bool dryRun, bool yes, Re
     private readonly RepoRoot _root = root ?? RepoRoot.Find();
     private string Prefix => Path.GetFileNameWithoutExtension(_root.SlnxPath);
     private string ModulesDir => Path.Combine(_root.Root, "backend", "Modules", name);
-    private string FeatureDir => Path.Combine(_root.Root, "frontend", "src", "features", name.ToKebabCase());
-    private string IndexRoutePath => Path.Combine(_root.Root, "frontend", "src", "routes", "index.tsx");
-    private string FeatureImportPath => $"@/features/{name.ToKebabCase()}/";
-
-    private const string IndexRoutePlaceholder = """
-        import type { JSX } from 'react';
-        import { createFileRoute } from '@tanstack/react-router';
-
-        export const Route = createFileRoute('/')({
-            component: IndexPage,
-        });
-
-        function IndexPage(): JSX.Element {
-            return <></>;
-        }
-        """;
 
     internal async Task<int> RemoveAsync()
     {
@@ -53,10 +37,10 @@ internal sealed class RemoveModuleService(string name, bool dryRun, bool yes, Re
 
     private string[] ModuleProjectPaths() =>
     [
-        Path.Combine(ModulesDir, $"{Prefix}.{name}.Contracts",         $"{Prefix}.{name}.Contracts.csproj"),
-        Path.Combine(ModulesDir, $"{Prefix}.{name}.Implementation",    $"{Prefix}.{name}.Implementation.csproj"),
-        Path.Combine(ModulesDir, $"{Prefix}.{name}.UnitTests",         $"{Prefix}.{name}.UnitTests.csproj"),
-        Path.Combine(ModulesDir, $"{Prefix}.{name}.IntegrationTests",  $"{Prefix}.{name}.IntegrationTests.csproj"),
+        Path.Combine(ModulesDir, $"{Prefix}.{name}.Contracts",        $"{Prefix}.{name}.Contracts.csproj"),
+        Path.Combine(ModulesDir, $"{Prefix}.{name}.Implementation",   $"{Prefix}.{name}.Implementation.csproj"),
+        Path.Combine(ModulesDir, $"{Prefix}.{name}.UnitTests",        $"{Prefix}.{name}.UnitTests.csproj"),
+        Path.Combine(ModulesDir, $"{Prefix}.{name}.IntegrationTests", $"{Prefix}.{name}.IntegrationTests.csproj"),
     ];
 
     private void WarnIfCrossReferences()
@@ -95,13 +79,6 @@ internal sealed class RemoveModuleService(string name, bool dryRun, bool yes, Re
             Console.WriteLine($"  Remove from solution:          {Path.GetRelativePath(_root.Root, proj)}");
         Console.WriteLine($"  Remove project reference:      {Prefix}.Api -> {implCsproj}");
         Console.WriteLine($"  Remove module registration:    new {name}Module() from {Path.GetRelativePath(_root.Root, programCsPath)}");
-
-        if (Directory.Exists(FeatureDir))
-            Console.WriteLine($"  Remove directory:              {FeatureDir}");
-
-        if (File.Exists(IndexRoutePath) && File.ReadAllText(IndexRoutePath).Contains(FeatureImportPath, StringComparison.Ordinal))
-            Console.WriteLine($"  Reset to placeholder:          {Path.GetRelativePath(_root.Root, IndexRoutePath)}");
-
         Console.WriteLine();
     }
 
@@ -122,30 +99,6 @@ internal sealed class RemoveModuleService(string name, bool dryRun, bool yes, Re
         UnregisterModuleAsync();
         Directory.Delete(ModulesDir, recursive: true);
         Console.WriteLine($"  Deleted: {ModulesDir}");
-        RemoveFrontendFeature();
-        ResetIndexRoute();
-    }
-
-    private void RemoveFrontendFeature()
-    {
-        if (!Directory.Exists(FeatureDir))
-            return;
-
-        Directory.Delete(FeatureDir, recursive: true);
-        Console.WriteLine($"  Deleted: {FeatureDir}");
-    }
-
-    private void ResetIndexRoute()
-    {
-        if (!File.Exists(IndexRoutePath))
-            return;
-
-        var content = File.ReadAllText(IndexRoutePath);
-        if (!content.Contains(FeatureImportPath, StringComparison.Ordinal))
-            return;
-
-        File.WriteAllText(IndexRoutePath, IndexRoutePlaceholder);
-        Console.WriteLine($"  Reset to placeholder: {Path.GetRelativePath(_root.Root, IndexRoutePath)}");
     }
 
     private void UnregisterModuleAsync()
