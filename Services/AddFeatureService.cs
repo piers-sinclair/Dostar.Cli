@@ -31,11 +31,7 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null)
 
         var model = new { name, name_kebab = NameKebab, name_screaming = NameScreaming };
 
-        await Task.WhenAll(
-            TemplateRenderer.RenderAsync("FeatureList.tsx.scriban", model, Path.Combine(componentsDir, $"{name}List.tsx")),
-            TemplateRenderer.RenderAsync("FeatureList.test.tsx.scriban", model, Path.Combine(componentsDir, $"{name}List.test.tsx")),
-            TemplateRenderer.RenderAsync("useFeature.ts.scriban", model, Path.Combine(hooksDir, $"use{name}.ts")),
-            TemplateRenderer.RenderAsync("handlers.ts.scriban", model, Path.Combine(mocksDir, "handlers.ts")));
+        await TemplateRenderer.RenderAsync("handlers.ts.scriban", model, Path.Combine(mocksDir, "handlers.ts"));
 
         Console.WriteLine(" Generated feature files.");
     }

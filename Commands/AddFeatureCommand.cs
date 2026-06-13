@@ -9,7 +9,7 @@ internal static class AddFeatureCommand
             Description = "PascalCase name for the new feature (e.g. Billing)"
         };
 
-        var command = new Command("add-feature", "Scaffold a new frontend feature folder with components, hooks, and mocks");
+        var command = new Command("add-feature", "Scaffold a new frontend feature folder structure with an empty MSW handlers file");
         command.Arguments.Add(nameArg);
         command.SetAction((parseResult, _) => HandleAsync(parseResult.GetValue(nameArg)!));
 
@@ -31,10 +31,8 @@ internal static class AddFeatureCommand
             return 0;
 
         Console.WriteLine($"Feature '{name}' scaffolded successfully.");
-        Console.WriteLine(" Next steps:");
-        Console.WriteLine($" - Replace 'unknown[]' in hooks/use{name}.ts with your real API response type");
-        Console.WriteLine($" - Add typed test fixtures to mocks/handlers.ts (see todos feature for an example)");
-        Console.WriteLine(" - Implement your components");
+        Console.WriteLine("  Next steps:");
+        Console.WriteLine("    - Run /scaffold-feature in Claude Code to build out the full frontend implementation");
         return 0;
     }
 }

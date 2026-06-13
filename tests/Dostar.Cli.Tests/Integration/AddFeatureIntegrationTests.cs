@@ -7,40 +7,32 @@ public class AddFeatureIntegrationTests : IDisposable
     private readonly FakeRepo _repo = new();
 
     [Fact]
-    public async Task AddAsync_NewFeature_CreatesAllExpectedFiles()
+    public async Task AddAsync_NewFeature_CreatesFolderStructureAndHandlers()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
 
         var featureDir = _repo.FeaturesDir("Billing");
 
-        Directory.Exists(featureDir).ShouldBeTrue();
-        File.Exists(Path.Combine(featureDir, "components", "BillingList.tsx")).ShouldBeTrue();
-        File.Exists(Path.Combine(featureDir, "components", "BillingList.test.tsx")).ShouldBeTrue();
-        File.Exists(Path.Combine(featureDir, "hooks", "useBilling.ts")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(featureDir, "components")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(featureDir, "hooks")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(featureDir, "mocks")).ShouldBeTrue();
         File.Exists(Path.Combine(featureDir, "mocks", "handlers.ts")).ShouldBeTrue();
+        File.Exists(Path.Combine(featureDir, "components", "BillingList.tsx")).ShouldBeFalse();
+        File.Exists(Path.Combine(featureDir, "hooks", "useBilling.ts")).ShouldBeFalse();
     }
 
     [Fact]
-    public async Task AddAsync_NewFeature_GeneratesCorrectImportPaths()
+    public async Task AddAsync_NewFeature_HandlersContainsUrlConstantsAndTypedEmptyArray()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
 
         var featureDir = _repo.FeaturesDir("Billing");
-        var componentContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "components", "BillingList.tsx"));
-        var testContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "components", "BillingList.test.tsx"));
-        var hookContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "hooks", "useBilling.ts"));
         var handlersContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "mocks", "handlers.ts"));
 
-        componentContent.ShouldContain("@/features/billing/hooks/useBilling");
-        componentContent.ShouldContain("@/shared/components/ui/card");
-        testContent.ShouldContain("defaultBillingItems");
-        testContent.ShouldContain("@/features/billing/mocks/handlers");
-        hookContent.ShouldContain("BILLING_API_PATH");
-        hookContent.ShouldContain("BILLING_QUERY_KEY");
-        hookContent.ShouldContain("/api/v1/billing");
         handlersContent.ShouldContain("BILLING_URL");
+        handlersContent.ShouldContain("BILLING_BY_ID_URL");
         handlersContent.ShouldContain("/api/v1/billing");
-        handlersContent.ShouldContain("defaultBillingItems");
+        handlersContent.ShouldContain("RequestHandler[]");
     }
 
     [Fact]
@@ -53,15 +45,11 @@ public class AddFeatureIntegrationTests : IDisposable
         Directory.Exists(featureDir).ShouldBeTrue();
         featureDir.ShouldEndWith("user-management");
 
-        var componentContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "components", "UserManagementList.tsx"));
-        var hookContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "hooks", "useUserManagement.ts"));
         var handlersContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "mocks", "handlers.ts"));
 
-        componentContent.ShouldContain("@/features/user-management/hooks/useUserManagement");
-        hookContent.ShouldContain("USER_MANAGEMENT_API_PATH");
-        hookContent.ShouldContain("/api/v1/user-management");
         handlersContent.ShouldContain("USER_MANAGEMENT_URL");
         handlersContent.ShouldContain("/api/v1/user-management");
+        handlersContent.ShouldContain("RequestHandler[]");
     }
 
     [Fact]

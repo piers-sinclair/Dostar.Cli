@@ -42,7 +42,7 @@ internal static class AddModuleCommand
         Console.WriteLine($"Module '{name}' scaffolded successfully.");
         Console.WriteLine("  Next steps:");
         Console.WriteLine("    - Run: dotnet build");
-        Console.WriteLine("    - Add EF Core migrations if needed");
+        Console.WriteLine("    - Run /scaffold-module in Claude Code to build out the implementation");
         return 0;
     }
 }
