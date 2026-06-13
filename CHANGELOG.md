@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.4.0...v0.5.0) (2026-06-13)
+
+
+### Features
+
+* include git remote hint in post-scaffold next steps ([#35](https://github.com/piers-sinclair/Dostar.Cli/issues/35)) ([b992933](https://github.com/piers-sinclair/Dostar.Cli/commit/b9929338f9373075253a4c4f3bbf4d02e432e8dd))
+* initialise git repo after scaffolding new project ([#34](https://github.com/piers-sinclair/Dostar.Cli/issues/34)) ([29ad9de](https://github.com/piers-sinclair/Dostar.Cli/commit/29ad9de843fbd05db393cf9bd46ff2cfbcd9a0cf))
+
 ## [0.4.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.3.0...v0.4.0) (2026-06-12)
 
 
