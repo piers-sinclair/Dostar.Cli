@@ -127,7 +127,7 @@ internal sealed class ProjectService(string projectName, string? output, string 
             File.WriteAllText(manifestPath, "{\n  \".\": \"0.0.0\"\n}\n");
     }
 
-    private static void CleanClaudeMd(string rootDir)
+    private void CleanClaudeMd(string rootDir)
     {
         var claudeMdPath = Path.Combine(rootDir, "CLAUDE.md");
         if (!File.Exists(claudeMdPath))
@@ -135,15 +135,27 @@ internal sealed class ProjectService(string projectName, string? output, string 
 
         var lines = File.ReadAllLines(claudeMdPath).ToList();
 
+        // Remove the cross-repo dependency callout (Dostar-internal maintenance note)
         var blockStart = lines.FindIndex(l => l.StartsWith("> **Cross-repo dependency:**", StringComparison.Ordinal));
-        if (blockStart == -1)
-            return;
+        if (blockStart != -1)
+        {
+            var blockEnd = blockStart + 1;
+            while (blockEnd < lines.Count && lines[blockEnd].StartsWith('>'))
+                blockEnd++;
+            lines.RemoveRange(blockStart, blockEnd - blockStart);
+        }
 
-        var blockEnd = blockStart + 1;
-        while (blockEnd < lines.Count && lines[blockEnd].StartsWith('>'))
-            blockEnd++;
-
-        lines.RemoveRange(blockStart, blockEnd - blockStart);
+        // Replace the template framing paragraph with a neutral project-specific placeholder.
+        // After token substitution the line reads "<ProjectName> is a production-ready fullstack template..."
+        // which describes Dostar the template, not the team's actual product.
+        for (var i = 0; i < lines.Count; i++)
+        {
+            if (lines[i].Contains("is a production-ready fullstack template", StringComparison.Ordinal))
+            {
+                lines[i] = $"{projectName} is a fullstack .NET + React application.";
+                break;
+            }
+        }
 
         var result = new List<string>(lines.Count);
         var prevBlank = false;
