@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.5.0...v0.6.0) (2026-06-13)
+
+
+### Features
+
+* minimal scaffold wiring + Claude skill hints ([#38](https://github.com/piers-sinclair/Dostar.Cli/issues/38)) ([8f464bf](https://github.com/piers-sinclair/Dostar.Cli/commit/8f464bf4029d6635644cb9f561a78309545fb01e))
+
 ## [0.5.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.4.0...v0.5.0) (2026-06-13)
 
 
