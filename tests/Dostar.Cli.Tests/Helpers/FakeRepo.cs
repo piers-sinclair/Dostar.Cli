@@ -12,6 +12,8 @@ namespace Dostar.Cli.Tests.Helpers;
 ///     frontend/
 ///       src/
 ///         features/
+///         routes/
+///           index.tsx   ← pre-populated with TodoList and sentinel comments
 /// </summary>
 internal sealed class FakeRepo : IDisposable
 {
@@ -25,9 +27,11 @@ internal sealed class FakeRepo : IDisposable
     {
         Root = Path.Combine(Path.GetTempPath(), $"dostar-test-{Guid.NewGuid():N}");
         var apiDir = Path.Combine(Root, "backend", $"{Prefix}.Api");
+        var routesDir = Path.Combine(Root, "frontend", "src", "routes");
 
         Directory.CreateDirectory(apiDir);
         Directory.CreateDirectory(Path.Combine(Root, "frontend", "src", "features"));
+        Directory.CreateDirectory(routesDir);
 
         SlnxPath = Path.Combine(Root, $"{Prefix}.slnx");
         File.WriteAllText(SlnxPath, "<Solution>\n</Solution>\n");
@@ -47,6 +51,28 @@ internal sealed class FakeRepo : IDisposable
             "IModule[] modules =\n[\n];\n",
             System.Text.Encoding.UTF8);
 
+        File.WriteAllText(
+            Path.Combine(routesDir, "index.tsx"),
+            """
+            import type { JSX } from 'react';
+            import { createFileRoute } from '@tanstack/react-router';
+            import { TodoList } from '@/features/todos/components/TodoList';
+
+            export const Route = createFileRoute('/')({
+                component: IndexPage,
+            });
+
+            function IndexPage(): JSX.Element {
+                return (
+                    <div className="mx-auto max-w-lg space-y-6">
+                        {/* dostar:feature:todos:start */}
+                        <TodoList />
+                        {/* dostar:feature:todos:end */}
+                    </div>
+                );
+            }
+            """);
+
         RepoRoot = new RepoRoot(Root, SlnxPath);
     }
 
@@ -55,6 +81,9 @@ internal sealed class FakeRepo : IDisposable
 
     internal string FeaturesDir(string featureName) =>
         Path.Combine(Root, "frontend", "src", "features", featureName.ToKebabCase());
+
+    internal string IndexRoutePath =>
+        Path.Combine(Root, "frontend", "src", "routes", "index.tsx");
 
     internal void CreateFeatureDir(string featureName) =>
         Directory.CreateDirectory(FeaturesDir(featureName));

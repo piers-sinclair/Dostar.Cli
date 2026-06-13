@@ -7,7 +7,7 @@ public class AddFeatureIntegrationTests : IDisposable
     private readonly FakeRepo _repo = new();
 
     [Fact]
-    public async Task AddAsync_NewFeature_CreatesFolderStructureAndHandlers()
+    public async Task AddAsync_NewFeature_CreatesFolderStructureAndFiles()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
 
@@ -17,8 +17,8 @@ public class AddFeatureIntegrationTests : IDisposable
         Directory.Exists(Path.Combine(featureDir, "hooks")).ShouldBeTrue();
         Directory.Exists(Path.Combine(featureDir, "mocks")).ShouldBeTrue();
         File.Exists(Path.Combine(featureDir, "mocks", "handlers.ts")).ShouldBeTrue();
-        File.Exists(Path.Combine(featureDir, "components", "BillingList.tsx")).ShouldBeFalse();
-        File.Exists(Path.Combine(featureDir, "hooks", "useBilling.ts")).ShouldBeFalse();
+        File.Exists(Path.Combine(featureDir, "components", "BillingList.tsx")).ShouldBeTrue();
+        File.Exists(Path.Combine(featureDir, "hooks", "useBilling.ts")).ShouldBeTrue();
     }
 
     [Fact]
@@ -33,6 +33,67 @@ public class AddFeatureIntegrationTests : IDisposable
         handlersContent.ShouldContain("BILLING_BY_ID_URL");
         handlersContent.ShouldContain("/api/v1/billing");
         handlersContent.ShouldContain("RequestHandler[]");
+    }
+
+    [Fact]
+    public async Task AddAsync_NewFeature_ListComponentContainsHookAndCard()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+
+        var featureDir = _repo.FeaturesDir("Billing");
+        var componentContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "components", "BillingList.tsx"));
+
+        componentContent.ShouldContain("useBilling");
+        componentContent.ShouldContain("BillingList");
+        componentContent.ShouldContain("CardTitle");
+    }
+
+    [Fact]
+    public async Task AddAsync_NewFeature_HookContainsQueryAndApiPath()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+
+        var featureDir = _repo.FeaturesDir("Billing");
+        var hookContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "hooks", "useBilling.ts"));
+
+        hookContent.ShouldContain("useBilling");
+        hookContent.ShouldContain("/api/v1/billing");
+        hookContent.ShouldContain("useQuery");
+    }
+
+    [Fact]
+    public async Task AddAsync_NewFeature_WiresIntoIndexRouteWithSentinels()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+
+        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
+        indexRoute.ShouldContain("import { BillingList }");
+        indexRoute.ShouldContain("{/* dostar:feature:billing:start */}");
+        indexRoute.ShouldContain("<BillingList />");
+        indexRoute.ShouldContain("{/* dostar:feature:billing:end */}");
+    }
+
+    [Fact]
+    public async Task AddAsync_NewFeature_SentinelAppearsAfterExistingFeature()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+
+        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
+        var todosEndIdx = indexRoute.IndexOf("{/* dostar:feature:todos:end */}", StringComparison.Ordinal);
+        var billingStartIdx = indexRoute.IndexOf("{/* dostar:feature:billing:start */}", StringComparison.Ordinal);
+
+        todosEndIdx.ShouldBeLessThan(billingStartIdx);
+    }
+
+    [Fact]
+    public async Task AddAsync_NoIndexRoute_SkipsRouteWiringAndReturnsTrue()
+    {
+        File.Delete(_repo.IndexRoutePath);
+
+        var result = await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+
+        result.ShouldBeTrue();
+        File.Exists(Path.Combine(_repo.FeaturesDir("Billing"), "components", "BillingList.tsx")).ShouldBeTrue();
     }
 
     [Fact]
