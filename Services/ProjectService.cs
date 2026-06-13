@@ -4,6 +4,8 @@ internal sealed class ProjectService(string projectName, string? output, string 
 {
     private const string TemplateRepoUrl = "https://github.com/piers-sinclair/Dostar.git";
     private const string GitDirectoryName = ".git";
+    private const string CrossRepoDependencyMarker = "> **Cross-repo dependency:**";
+    private const string TemplateFramingMarker = "is a production-ready fullstack template";
 
     private static readonly string[] TextExtensions =
     [
@@ -134,41 +136,52 @@ internal sealed class ProjectService(string projectName, string? output, string 
             return;
 
         var lines = File.ReadAllLines(claudeMdPath).ToList();
+        lines = RemoveCrossRepoDependencyBlock(lines);
+        lines = ReplaceTemplateIntro(lines);
+        lines = CollapseBlankLines(lines);
 
-        // Remove the cross-repo dependency callout (Dostar-internal maintenance note)
-        var blockStart = lines.FindIndex(l => l.StartsWith("> **Cross-repo dependency:**", StringComparison.Ordinal));
-        if (blockStart != -1)
-        {
-            var blockEnd = blockStart + 1;
-            while (blockEnd < lines.Count && lines[blockEnd].StartsWith('>'))
-                blockEnd++;
-            lines.RemoveRange(blockStart, blockEnd - blockStart);
-        }
+        File.WriteAllLines(claudeMdPath, lines);
+    }
 
-        // Replace the template framing paragraph with a neutral project-specific placeholder.
-        // After token substitution the line reads "<ProjectName> is a production-ready fullstack template..."
-        // which describes Dostar the template, not the team's actual product.
-        for (var i = 0; i < lines.Count; i++)
-        {
-            if (lines[i].Contains("is a production-ready fullstack template", StringComparison.Ordinal))
-            {
-                lines[i] = $"{projectName} is a fullstack .NET + React application.";
-                break;
-            }
-        }
+    private static List<string> RemoveCrossRepoDependencyBlock(List<string> lines)
+    {
+        var blockStart = lines.FindIndex(l => l.StartsWith(CrossRepoDependencyMarker, StringComparison.Ordinal));
+        if (blockStart == -1)
+            return lines;
 
+        var blockEnd = blockStart + 1;
+        while (blockEnd < lines.Count && lines[blockEnd].StartsWith('>'))
+            blockEnd++;
+
+        var result = new List<string>(lines);
+        result.RemoveRange(blockStart, blockEnd - blockStart);
+        return result;
+    }
+
+    private List<string> ReplaceTemplateIntro(List<string> lines)
+    {
+        var index = lines.FindIndex(l => l.Contains(TemplateFramingMarker, StringComparison.Ordinal));
+        if (index == -1)
+            return lines;
+
+        var result = new List<string>(lines);
+        result[index] = $"{projectName} is a fullstack .NET + React application.";
+        return result;
+    }
+
+    private static List<string> CollapseBlankLines(List<string> lines)
+    {
         var result = new List<string>(lines.Count);
-        var prevBlank = false;
+        var previousLineWasBlank = false;
         foreach (var line in lines)
         {
             var isBlank = string.IsNullOrWhiteSpace(line);
-            if (isBlank && prevBlank)
+            if (isBlank && previousLineWasBlank)
                 continue;
             result.Add(line);
-            prevBlank = isBlank;
+            previousLineWasBlank = isBlank;
         }
-
-        File.WriteAllLines(claudeMdPath, result);
+        return result;
     }
 
     private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
