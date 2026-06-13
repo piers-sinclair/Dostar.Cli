@@ -40,7 +40,7 @@ internal sealed class ProjectService(string projectName, string? output, string 
         CleanClaudeMd(outputDir);
 
         Console.WriteLine("Initialising git repository...");
-        await GitCli.InitAsync(outputDir);
+        await GitCli.InitAsync(outputDir, author);
 
         return outputDir;
     }

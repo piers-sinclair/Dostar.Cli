@@ -18,14 +18,14 @@ internal static class GitCli
             DeleteDirectoryForce(gitDir);
     }
 
-    internal static async Task InitAsync(string outputDir)
+    internal static async Task InitAsync(string outputDir, string author)
     {
         await ProcessRunner.RunAsync("git", ["init"], outputDir);
         await ProcessRunner.RunAsync("git", ["add", "-A"], outputDir);
         await ProcessRunner.RunAsync("git",
         [
-            "-c", "user.email=scaffold@dostar.dev",
-            "-c", "user.name=Dostar",
+            "-c", $"user.name={author}",
+            "-c", "user.email=noreply@dostar.dev",
             "commit", "--no-gpg-sign", "-m", "chore: initial scaffold"
         ], outputDir);
     }

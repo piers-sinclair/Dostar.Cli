@@ -17,7 +17,6 @@ public class GitCliInitTests : IAsyncLifetime
         if (!Directory.Exists(_dir))
             return Task.CompletedTask;
 
-        // Git objects are read-only on Windows; strip the attribute before deleting
         foreach (var file in Directory.EnumerateFiles(_dir, "*", SearchOption.AllDirectories))
         {
             var attrs = File.GetAttributes(file);
@@ -32,7 +31,7 @@ public class GitCliInitTests : IAsyncLifetime
     [Fact]
     public async Task InitAsync_CreatesGitRepoWithInitialCommit()
     {
-        await GitCli.InitAsync(_dir);
+        await GitCli.InitAsync(_dir, "Test Author");
 
         Directory.Exists(Path.Combine(_dir, ".git")).ShouldBeTrue();
     }
