@@ -100,7 +100,6 @@ public class ProjectNameSubstitutorTests
         result.ShouldContain("POSTGRES_DB: myapp");
     }
 
-    // Issue #43 — CONTRIBUTING.md "Questions?" link points to derived repo, not template
     [Fact]
     public void Substitute_ContributingIssueLink_ReplacesOrgAndProjectName()
     {
@@ -108,7 +107,6 @@ public class ProjectNameSubstitutorTests
             .ShouldBe("https://github.com/my-org/MyApp/issues");
     }
 
-    // Issue #44 — Dostar.Cli package references must survive substitution intact
     [Fact]
     public void Substitute_DostarCliInReadmeTable_PreservesFullReference()
     {
@@ -120,7 +118,6 @@ public class ProjectNameSubstitutorTests
         result.ShouldNotContain("my-org/Dostar.Cli");
     }
 
-    // Issue #44 — docs/*.md content (e.g. module-pattern.md namespaces) is substituted correctly
     [Fact]
     public void Substitute_DocsMarkdownNamespace_ReplacesProjectPrefix()
     {
@@ -128,7 +125,6 @@ public class ProjectNameSubstitutorTests
             .ShouldBe("- `MyApp.SharedKernel`, `MyApp.Todos.Contracts`, `MyApp.Api`");
     }
 
-    // Issue #45 — "dostar new-project" preserved in deploy-setup.md security checklist note
     [Fact]
     public void Substitute_DostarNewProjectInChecklistNote_PreservesCommand()
     {
