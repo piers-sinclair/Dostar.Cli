@@ -99,4 +99,40 @@ public class ProjectNameSubstitutorTests
         result.ShouldContain("namespace MyApp.Todos");
         result.ShouldContain("POSTGRES_DB: myapp");
     }
+
+    // Issue #43 — CONTRIBUTING.md "Questions?" link points to derived repo, not template
+    [Fact]
+    public void Substitute_ContributingIssueLink_ReplacesOrgAndProjectName()
+    {
+        Sub("https://github.com/piers-sinclair/Dostar/issues")
+            .ShouldBe("https://github.com/my-org/MyApp/issues");
+    }
+
+    // Issue #44 — Dostar.Cli package references must survive substitution intact
+    [Fact]
+    public void Substitute_DostarCliInReadmeTable_PreservesFullReference()
+    {
+        const string line = "| CLI tool | `dostar` — .NET global tool in [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli) |";
+        var result = Sub(line);
+        result.ShouldContain("piers-sinclair/Dostar.Cli");
+        result.ShouldContain("Dostar.Cli");
+        result.ShouldNotContain("MyApp.Cli");
+        result.ShouldNotContain("my-org/Dostar.Cli");
+    }
+
+    // Issue #44 — docs/*.md content (e.g. module-pattern.md namespaces) is substituted correctly
+    [Fact]
+    public void Substitute_DocsMarkdownNamespace_ReplacesProjectPrefix()
+    {
+        Sub("- `Dostar.SharedKernel`, `Dostar.Todos.Contracts`, `Dostar.Api`")
+            .ShouldBe("- `MyApp.SharedKernel`, `MyApp.Todos.Contracts`, `MyApp.Api`");
+    }
+
+    // Issue #45 — "dostar new-project" preserved in deploy-setup.md security checklist note
+    [Fact]
+    public void Substitute_DostarNewProjectInChecklistNote_PreservesCommand()
+    {
+        Sub("_already done if you ran `dostar new-project`_")
+            .ShouldBe("_already done if you ran `dostar new-project`_");
+    }
 }
