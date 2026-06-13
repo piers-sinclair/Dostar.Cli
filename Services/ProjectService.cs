@@ -4,6 +4,11 @@ internal sealed class ProjectService(string projectName, string? output, string 
 {
     private const string TemplateRepoUrl = "https://github.com/piers-sinclair/Dostar.git";
     private const string GitDirectoryName = ".git";
+    private const string CrossRepoDependencyMarker = "> **Cross-repo dependency:**";
+    private const string TemplateMarketingMarker = "gives you a production-ready fullstack app";
+    private const string GoalsSectionHeading = "## Goals";
+    private const string CreateProjectStepHeading = "### 1. Create your project";
+    private const string NumberedStepPrefix = "### ";
 
     private static readonly string[] TextExtensions =
     [
@@ -134,29 +139,10 @@ internal sealed class ProjectService(string projectName, string? output, string 
             return;
 
         var lines = File.ReadAllLines(claudeMdPath).ToList();
+        lines = RemoveCrossRepoDependencyBlock(lines);
+        lines = CollapseBlankLines(lines);
 
-        var blockStart = lines.FindIndex(l => l.StartsWith("> **Cross-repo dependency:**", StringComparison.Ordinal));
-        if (blockStart == -1)
-            return;
-
-        var blockEnd = blockStart + 1;
-        while (blockEnd < lines.Count && lines[blockEnd].StartsWith('>'))
-            blockEnd++;
-
-        lines.RemoveRange(blockStart, blockEnd - blockStart);
-
-        var result = new List<string>(lines.Count);
-        var prevBlank = false;
-        foreach (var line in lines)
-        {
-            var isBlank = string.IsNullOrWhiteSpace(line);
-            if (isBlank && prevBlank)
-                continue;
-            result.Add(line);
-            prevBlank = isBlank;
-        }
-
-        File.WriteAllLines(claudeMdPath, result);
+        File.WriteAllLines(claudeMdPath, lines);
     }
 
     private static void CleanReadmeMd(string rootDir)
@@ -166,75 +152,92 @@ internal sealed class ProjectService(string projectName, string? output, string 
             return;
 
         var lines = File.ReadAllLines(readmePath).ToList();
-        var staged = new List<string>(lines.Count);
-        var inGoalsSection = false;
-        var inCreateProjectStep = false;
-        var quickStartStepNumber = 1;
+        lines = RemoveLineContaining(lines, TemplateMarketingMarker);
+        lines = RemoveSection(lines, GoalsSectionHeading);
+        lines = RemoveSection(lines, CreateProjectStepHeading);
+        lines = RenumberQuickStartSteps(lines);
+        lines = CollapseBlankLines(lines);
 
-        foreach (var rawLine in lines)
+        File.WriteAllLines(readmePath, lines);
+    }
+
+    private static List<string> RemoveCrossRepoDependencyBlock(List<string> lines)
+    {
+        var blockStart = lines.FindIndex(l => l.StartsWith(CrossRepoDependencyMarker, StringComparison.Ordinal));
+        if (blockStart == -1)
+            return lines;
+
+        var blockEnd = blockStart + 1;
+        while (blockEnd < lines.Count && lines[blockEnd].StartsWith('>'))
+            blockEnd++;
+
+        var result = new List<string>(lines);
+        result.RemoveRange(blockStart, blockEnd - blockStart);
+        return result;
+    }
+
+    private static List<string> RemoveLineContaining(List<string> lines, string marker) =>
+        lines.Where(line => !line.Contains(marker, StringComparison.Ordinal)).ToList();
+
+    private static List<string> RemoveSection(List<string> lines, string sectionHeading)
+    {
+        var spaceIndex = sectionHeading.IndexOf(' ');
+        var terminatorPrefix = sectionHeading[..spaceIndex] + " ";
+        var result = new List<string>(lines.Count);
+        var inSection = false;
+        foreach (var line in lines)
         {
-            var line = rawLine;
-
-            // Remove the template marketing sentence (contains this phrase regardless of project name)
-            if (line.Contains("gives you a production-ready fullstack app", StringComparison.Ordinal))
-                continue;
-
-            // Detect and strip the ## Goals section (template selling points, not project goals)
-            if (line == "## Goals")
+            if (line == sectionHeading)
             {
-                inGoalsSection = true;
+                inSection = true;
                 continue;
             }
-            if (inGoalsSection)
+            if (inSection)
             {
-                if (line.StartsWith("## ", StringComparison.Ordinal))
-                    inGoalsSection = false; // next section heading — fall through to output
+                if (line.StartsWith(terminatorPrefix, StringComparison.Ordinal))
+                    inSection = false;
                 else
                     continue;
             }
+            result.Add(line);
+        }
+        return result;
+    }
 
-            // Detect and strip Quick Start Step 1 ("Create your project" — already done by the CLI)
-            if (line == "### 1. Create your project")
+    private static List<string> RenumberQuickStartSteps(List<string> lines)
+    {
+        var stepNumber = 1;
+        var result = new List<string>(lines.Count);
+        foreach (var line in lines)
+        {
+            if (line.StartsWith(NumberedStepPrefix, StringComparison.Ordinal))
             {
-                inCreateProjectStep = true;
-                continue;
-            }
-            if (inCreateProjectStep)
-            {
-                if (line.StartsWith("### ", StringComparison.Ordinal))
-                    inCreateProjectStep = false; // next step — fall through to renumber
-                else
-                    continue;
-            }
-
-            // Renumber remaining numbered Quick Start steps (### 2. → ### 1., etc.)
-            if (line.StartsWith("### ", StringComparison.Ordinal) && line.Length > 4)
-            {
-                var afterPrefix = line[4..];
-                var dotIdx = afterPrefix.IndexOf(". ", StringComparison.Ordinal);
-                if (dotIdx > 0 && afterPrefix[..dotIdx].All(char.IsAsciiDigit))
+                var afterPrefix = line[NumberedStepPrefix.Length..];
+                var dotSpaceIndex = afterPrefix.IndexOf(". ", StringComparison.Ordinal);
+                if (dotSpaceIndex > 0 && afterPrefix[..dotSpaceIndex].All(char.IsAsciiDigit))
                 {
-                    line = $"### {quickStartStepNumber}. {afterPrefix[(dotIdx + 2)..]}";
-                    quickStartStepNumber++;
+                    result.Add($"{NumberedStepPrefix}{stepNumber++}. {afterPrefix[(dotSpaceIndex + 2)..]}");
+                    continue;
                 }
             }
-
-            staged.Add(line);
+            result.Add(line);
         }
+        return result;
+    }
 
-        // Collapse consecutive blank lines introduced by the removals above
-        var result = new List<string>(staged.Count);
-        var prevBlank = false;
-        foreach (var line in staged)
+    private static List<string> CollapseBlankLines(List<string> lines)
+    {
+        var result = new List<string>(lines.Count);
+        var previousLineWasBlank = false;
+        foreach (var line in lines)
         {
             var isBlank = string.IsNullOrWhiteSpace(line);
-            if (isBlank && prevBlank)
+            if (isBlank && previousLineWasBlank)
                 continue;
             result.Add(line);
-            prevBlank = isBlank;
+            previousLineWasBlank = isBlank;
         }
-
-        File.WriteAllLines(readmePath, result);
+        return result;
     }
 
     private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
