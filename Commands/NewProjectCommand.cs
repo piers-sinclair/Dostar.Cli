@@ -60,11 +60,11 @@ internal static class NewProjectCommand
             Console.WriteLine($"Project '{projectName}' created successfully at '{outputDir}'.");
             Console.WriteLine();
             Console.WriteLine("Next steps:");
-            Console.WriteLine($"  cd {projectName}");
-            Console.WriteLine($"  git remote add origin https://github.com/{owner}/{projectName}.git");
-            Console.WriteLine("  git push -u origin main");
-            Console.WriteLine("  code .        # VS Code will prompt \"Reopen in Container\" — click it");
-            Console.WriteLine("  # Then read README.md for full setup instructions");
+            Console.WriteLine();
+
+            var ghAvailable = GhCli.IsAvailable();
+            Console.Write(BuildNextSteps(projectName, owner, ghAvailable));
+
             return 0;
         }
         catch (InvalidOperationException ex)
@@ -72,5 +72,37 @@ internal static class NewProjectCommand
             Console.Error.WriteLine($"Error: {ex.Message}");
             return 1;
         }
+    }
+
+    internal static string BuildNextSteps(string projectName, string owner, bool ghAvailable)
+    {
+        if (ghAvailable)
+        {
+            return $"""
+                  cd {projectName}
+
+                  gh repo create {projectName} --private --source=. --remote=origin --push
+
+                  code .        # VS Code will prompt "Reopen in Container" — click it
+                  # Then read README.md for full setup instructions
+
+                """;
+        }
+
+        return $"""
+              1. Create a GitHub repository named '{projectName}'
+                 https://github.com/new
+
+              2. Connect your local repository
+
+                 git remote add origin https://github.com/{owner}/{projectName}.git
+                 git push -u origin main
+
+              3. Open the project
+
+                 code .        # VS Code will prompt "Reopen in Container" — click it
+                 # Then read README.md for full setup instructions
+
+            """;
     }
 }
