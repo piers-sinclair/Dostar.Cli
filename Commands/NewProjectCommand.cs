@@ -61,6 +61,8 @@ internal static class NewProjectCommand
             Console.WriteLine();
             Console.WriteLine("Next steps:");
             Console.WriteLine($"  cd {projectName}");
+            Console.WriteLine($"  git remote add origin https://github.com/{owner}/{projectName}.git");
+            Console.WriteLine("  git push -u origin main");
             Console.WriteLine("  code .        # VS Code will prompt \"Reopen in Container\" — click it");
             Console.WriteLine("  # Then read README.md for full setup instructions");
             return 0;
