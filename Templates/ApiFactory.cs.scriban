@@ -21,9 +21,6 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     async Task IAsyncLifetime.InitializeAsync()
     {
         await _postgres.StartAsync();
-        using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<{{ name }}DbContext>();
-        await db.Database.MigrateAsync();
     }
 
     async Task IAsyncLifetime.DisposeAsync()
