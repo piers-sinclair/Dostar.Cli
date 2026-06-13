@@ -73,45 +73,53 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null)
 
     private void InsertSentinelBlock(List<string> lines)
     {
-        // Preferred: after the last existing sentinel end marker
+        if (TryInsertAfterLastSentinel(lines)) return;
+        if (TryReplacePlaceholderReturn(lines)) return;
+        InsertBeforeClosingDiv(lines);
+    }
+
+    private bool TryInsertAfterLastSentinel(List<string> lines)
+    {
         var lastEndIdx = -1;
         for (var i = 0; i < lines.Count; i++)
         {
             if (lines[i].Contains(":end */}", StringComparison.Ordinal))
                 lastEndIdx = i;
         }
-        if (lastEndIdx >= 0)
-        {
-            lines.InsertRange(lastEndIdx + 1, SentinelBlock(LeadingWhitespace(lines[lastEndIdx])));
-            return;
-        }
-
-        // Placeholder return — replace with container + sentinel
-        var placeholderIdx = lines.FindIndex(l => l.Trim() == "return <></>;");
-        if (placeholderIdx >= 0)
-        {
-            var indent = LeadingWhitespace(lines[placeholderIdx]);
-            lines.RemoveAt(placeholderIdx);
-            lines.InsertRange(placeholderIdx,
-            [
-                $"{indent}return (",
-                $"{indent}    <div className=\"mx-auto max-w-lg space-y-6\">",
-                $"{indent}        {StartSentinel}",
-                $"{indent}        <{name}List />",
-                $"{indent}        {EndSentinel}",
-                $"{indent}    </div>",
-                $"{indent});",
-            ]);
-            return;
-        }
-
-        // Fallback: before the closing container </div>
-        var closingDivIdx = lines.FindLastIndex(l => l.Trim() == "</div>");
-        if (closingDivIdx >= 0)
-            lines.InsertRange(closingDivIdx, SentinelBlock(LeadingWhitespace(lines[closingDivIdx]) + "    "));
+        if (lastEndIdx < 0)
+            return false;
+        lines.InsertRange(lastEndIdx + 1, BuildSentinelLines(LeadingWhitespace(lines[lastEndIdx])));
+        return true;
     }
 
-    private string[] SentinelBlock(string indent) =>
+    private bool TryReplacePlaceholderReturn(List<string> lines)
+    {
+        var placeholderIdx = lines.FindIndex(l => l.Trim() == "return <></>;");
+        if (placeholderIdx < 0)
+            return false;
+        var indent = LeadingWhitespace(lines[placeholderIdx]);
+        lines.RemoveAt(placeholderIdx);
+        lines.InsertRange(placeholderIdx,
+        [
+            $"{indent}return (",
+            $"{indent}    <div className=\"mx-auto max-w-lg space-y-6\">",
+            $"{indent}        {StartSentinel}",
+            $"{indent}        <{name}List />",
+            $"{indent}        {EndSentinel}",
+            $"{indent}    </div>",
+            $"{indent});",
+        ]);
+        return true;
+    }
+
+    private void InsertBeforeClosingDiv(List<string> lines)
+    {
+        var closingDivIdx = lines.FindLastIndex(l => l.Trim() == "</div>");
+        if (closingDivIdx >= 0)
+            lines.InsertRange(closingDivIdx, BuildSentinelLines(LeadingWhitespace(lines[closingDivIdx]) + "    "));
+    }
+
+    private string[] BuildSentinelLines(string indent) =>
     [
         $"{indent}{StartSentinel}",
         $"{indent}<{name}List />",

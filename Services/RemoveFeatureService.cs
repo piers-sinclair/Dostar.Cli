@@ -9,6 +9,8 @@ internal sealed class RemoveFeatureService(string name, bool dryRun, bool yes, R
     private string StartSentinel => $"{{/* dostar:feature:{NameKebab}:start */}}";
     private string EndSentinel => $"{{/* dostar:feature:{NameKebab}:end */}}";
 
+    private const string AnySentinelMarker = "{/* dostar:feature:";
+
     private const string IndexRoutePlaceholder =
         """
         import type { JSX } from 'react';
@@ -45,7 +47,8 @@ internal sealed class RemoveFeatureService(string name, bool dryRun, bool yes, R
             return Task.FromResult(0);
         }
 
-        DeleteFeatureAndCleanRoute();
+        DeleteFeatureDir();
+        CleanIndexRoute();
         Console.WriteLine();
         Console.WriteLine($"Feature '{name}' removed successfully.");
         return Task.FromResult(0);
@@ -68,11 +71,10 @@ internal sealed class RemoveFeatureService(string name, bool dryRun, bool yes, R
         return response is "y" or "yes";
     }
 
-    private void DeleteFeatureAndCleanRoute()
+    private void DeleteFeatureDir()
     {
         Directory.Delete(FeatureDir, recursive: true);
         Console.WriteLine($"  Deleted: {FeatureDir}");
-        CleanIndexRoute();
     }
 
     private void CleanIndexRoute()
@@ -85,19 +87,23 @@ internal sealed class RemoveFeatureService(string name, bool dryRun, bool yes, R
             return;
 
         var lines = content.Split('\n').ToList();
+        RemoveFeatureImports(lines);
+        RemoveSentinelBlock(lines);
 
-        // Remove import lines from this feature
+        var pruned = string.Join('\n', lines);
+        var hasRemainingFeatures = pruned.Contains(AnySentinelMarker, StringComparison.Ordinal);
+        File.WriteAllText(IndexRoutePath, hasRemainingFeatures ? pruned : IndexRoutePlaceholder);
+        Console.WriteLine($"  Updated route:     {Path.GetRelativePath(_root.Root, IndexRoutePath)}");
+    }
+
+    private void RemoveFeatureImports(List<string> lines) =>
         lines.RemoveAll(l => l.Contains($"from '@/features/{NameKebab}/", StringComparison.Ordinal));
 
-        // Remove sentinel block (start marker through end marker, inclusive)
+    private void RemoveSentinelBlock(List<string> lines)
+    {
         var startIdx = lines.FindIndex(l => l.Contains(StartSentinel, StringComparison.Ordinal));
         var endIdx = lines.FindIndex(l => l.Contains(EndSentinel, StringComparison.Ordinal));
         if (startIdx >= 0 && endIdx >= startIdx)
             lines.RemoveRange(startIdx, endIdx - startIdx + 1);
-
-        var pruned = string.Join('\n', lines);
-        var hasRemainingFeatures = pruned.Contains("{/* dostar:feature:", StringComparison.Ordinal);
-        File.WriteAllText(IndexRoutePath, hasRemainingFeatures ? pruned : IndexRoutePlaceholder);
-        Console.WriteLine($"  Updated route:     {Path.GetRelativePath(_root.Root, IndexRoutePath)}");
     }
 }
