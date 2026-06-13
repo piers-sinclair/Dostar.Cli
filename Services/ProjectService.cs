@@ -38,6 +38,7 @@ internal sealed class ProjectService(string projectName, string? output, string 
 
         Console.WriteLine("Cleaning up template-specific documentation...");
         CleanClaudeMd(outputDir);
+        CleanReadmeMd(outputDir);
 
         Console.WriteLine("Initialising git repository...");
         await GitCli.InitAsync(outputDir, author);
@@ -156,6 +157,84 @@ internal sealed class ProjectService(string projectName, string? output, string 
         }
 
         File.WriteAllLines(claudeMdPath, result);
+    }
+
+    private static void CleanReadmeMd(string rootDir)
+    {
+        var readmePath = Path.Combine(rootDir, "README.md");
+        if (!File.Exists(readmePath))
+            return;
+
+        var lines = File.ReadAllLines(readmePath).ToList();
+        var staged = new List<string>(lines.Count);
+        var inGoalsSection = false;
+        var inCreateProjectStep = false;
+        var quickStartStepNumber = 1;
+
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine;
+
+            // Remove the template marketing sentence (contains this phrase regardless of project name)
+            if (line.Contains("gives you a production-ready fullstack app", StringComparison.Ordinal))
+                continue;
+
+            // Detect and strip the ## Goals section (template selling points, not project goals)
+            if (line == "## Goals")
+            {
+                inGoalsSection = true;
+                continue;
+            }
+            if (inGoalsSection)
+            {
+                if (line.StartsWith("## ", StringComparison.Ordinal))
+                    inGoalsSection = false; // next section heading — fall through to output
+                else
+                    continue;
+            }
+
+            // Detect and strip Quick Start Step 1 ("Create your project" — already done by the CLI)
+            if (line == "### 1. Create your project")
+            {
+                inCreateProjectStep = true;
+                continue;
+            }
+            if (inCreateProjectStep)
+            {
+                if (line.StartsWith("### ", StringComparison.Ordinal))
+                    inCreateProjectStep = false; // next step — fall through to renumber
+                else
+                    continue;
+            }
+
+            // Renumber remaining numbered Quick Start steps (### 2. → ### 1., etc.)
+            if (line.StartsWith("### ", StringComparison.Ordinal) && line.Length > 4)
+            {
+                var afterPrefix = line[4..];
+                var dotIdx = afterPrefix.IndexOf(". ", StringComparison.Ordinal);
+                if (dotIdx > 0 && afterPrefix[..dotIdx].All(char.IsAsciiDigit))
+                {
+                    line = $"### {quickStartStepNumber}. {afterPrefix[(dotIdx + 2)..]}";
+                    quickStartStepNumber++;
+                }
+            }
+
+            staged.Add(line);
+        }
+
+        // Collapse consecutive blank lines introduced by the removals above
+        var result = new List<string>(staged.Count);
+        var prevBlank = false;
+        foreach (var line in staged)
+        {
+            var isBlank = string.IsNullOrWhiteSpace(line);
+            if (isBlank && prevBlank)
+                continue;
+            result.Add(line);
+            prevBlank = isBlank;
+        }
+
+        File.WriteAllLines(readmePath, result);
     }
 
     private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
