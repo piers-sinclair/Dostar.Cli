@@ -28,62 +28,41 @@ internal static class ReadmeCleaner
 
     private static List<string> RemoveSection(List<string> lines, string sectionHeading)
     {
-        var spaceIndex = sectionHeading.IndexOf(' ');
-        var terminatorPrefix = sectionHeading[..spaceIndex] + " ";
-        var result = new List<string>(lines.Count);
-        var inSection = false;
-        foreach (var line in lines)
-        {
-            if (line == sectionHeading)
-            {
-                inSection = true;
-                continue;
-            }
-            if (inSection)
-            {
-                if (line.StartsWith(terminatorPrefix, StringComparison.Ordinal))
-                    inSection = false;
-                else
-                    continue;
-            }
-            result.Add(line);
-        }
-        return result;
+        var start = lines.IndexOf(sectionHeading);
+        if (start == -1)
+            return lines;
+
+        var terminatorPrefix = sectionHeading[..sectionHeading.IndexOf(' ')] + " ";
+        var end = lines.FindIndex(start + 1, l => l.StartsWith(terminatorPrefix, StringComparison.Ordinal));
+
+        return end == -1
+            ? [.. lines.Take(start)]
+            : [.. lines.Take(start), .. lines.Skip(end)];
     }
 
     private static List<string> RenumberQuickStartSteps(List<string> lines)
     {
         var stepNumber = 1;
-        var result = new List<string>(lines.Count);
-        foreach (var line in lines)
-        {
-            if (line.StartsWith(NumberedStepPrefix, StringComparison.Ordinal))
-            {
-                var afterPrefix = line[NumberedStepPrefix.Length..];
-                var dotSpaceIndex = afterPrefix.IndexOf(". ", StringComparison.Ordinal);
-                if (dotSpaceIndex > 0 && afterPrefix[..dotSpaceIndex].All(char.IsAsciiDigit))
-                {
-                    result.Add($"{NumberedStepPrefix}{stepNumber++}. {afterPrefix[(dotSpaceIndex + 2)..]}");
-                    continue;
-                }
-            }
-            result.Add(line);
-        }
-        return result;
+        return lines
+            .Select(line => ExtractStepTitle(line) is { } title
+                ? $"{NumberedStepPrefix}{stepNumber++}. {title}"
+                : line)
+            .ToList();
     }
 
-    private static List<string> CollapseBlankLines(List<string> lines)
+    private static string? ExtractStepTitle(string line)
     {
-        var result = new List<string>(lines.Count);
-        var previousLineWasBlank = false;
-        foreach (var line in lines)
-        {
-            var isBlank = string.IsNullOrWhiteSpace(line);
-            if (isBlank && previousLineWasBlank)
-                continue;
-            result.Add(line);
-            previousLineWasBlank = isBlank;
-        }
-        return result;
+        if (!line.StartsWith(NumberedStepPrefix, StringComparison.Ordinal))
+            return null;
+        var afterPrefix = line[NumberedStepPrefix.Length..];
+        var dotSpaceIndex = afterPrefix.IndexOf(". ", StringComparison.Ordinal);
+        return dotSpaceIndex > 0 && afterPrefix[..dotSpaceIndex].All(char.IsAsciiDigit)
+            ? afterPrefix[(dotSpaceIndex + 2)..]
+            : null;
     }
+
+    private static List<string> CollapseBlankLines(List<string> lines) =>
+        lines
+            .Where((line, i) => i == 0 || !string.IsNullOrWhiteSpace(line) || !string.IsNullOrWhiteSpace(lines[i - 1]))
+            .ToList();
 }
