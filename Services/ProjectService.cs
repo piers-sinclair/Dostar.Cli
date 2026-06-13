@@ -39,6 +39,9 @@ internal sealed class ProjectService(string projectName, string? output, string 
         Console.WriteLine("Cleaning up template-specific documentation...");
         CleanClaudeMd(outputDir);
 
+        Console.WriteLine("Initialising git repository...");
+        await GitCli.InitAsync(outputDir, author);
+
         return outputDir;
     }
 
