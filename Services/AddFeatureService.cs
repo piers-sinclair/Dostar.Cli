@@ -1,6 +1,6 @@
 namespace Dostar.Cli;
 
-internal sealed class AddFeatureService(string name, RepoRoot? root = null)
+internal sealed class AddFeatureService(string name, RepoRoot? root = null, FeatureType type = FeatureType.List)
 {
     private readonly RepoRoot _root = root ?? RepoRoot.Find();
     private string NameKebab => name.ToKebabCase();
@@ -9,18 +9,25 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null)
     private string IndexRoutePath => Path.Combine(_root.Root, "frontend", "src", "routes", "index.tsx");
     private string StartSentinel => $"{{/* dostar:feature:{NameKebab}:start */}}";
     private string EndSentinel => $"{{/* dostar:feature:{NameKebab}:end */}}";
+    private string ComponentName => type == FeatureType.Form ? $"{name}Form" : $"{name}List";
 
     internal async Task<bool> AddAsync()
     {
-        if (Directory.Exists(FeaturesDir))
+        if (!Directory.Exists(FeaturesDir))
+        {
+            await GenerateFilesAsync();
+            if (type != FeatureType.None)
+                WireIndexRoute();
+            return true;
+        }
+
+        if (type == FeatureType.None)
         {
             Console.WriteLine($"Feature '{name}' already exists at {FeaturesDir}. Nothing to do.");
             return false;
         }
 
-        await GenerateFilesAsync();
-        WireIndexRoute();
-        return true;
+        return await AddComponentToExistingAsync();
     }
 
     private async Task GenerateFilesAsync()
@@ -36,10 +43,43 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null)
         var model = new { name, name_kebab = NameKebab, name_screaming = NameScreaming };
 
         await TemplateRenderer.RenderAsync("handlers.ts.scriban", model, Path.Combine(mocksDir, "handlers.ts"));
-        await TemplateRenderer.RenderAsync("FeatureList.tsx.scriban", model, Path.Combine(componentsDir, $"{name}List.tsx"));
-        await TemplateRenderer.RenderAsync("useFeature.ts.scriban", model, Path.Combine(hooksDir, $"use{name}.ts"));
+
+        if (type == FeatureType.List)
+        {
+            await TemplateRenderer.RenderAsync("FeatureList.tsx.scriban", model, Path.Combine(componentsDir, $"{name}List.tsx"));
+            await TemplateRenderer.RenderAsync("useFeature.ts.scriban", model, Path.Combine(hooksDir, $"use{name}.ts"));
+        }
+        else if (type == FeatureType.Form)
+        {
+            await TemplateRenderer.RenderAsync("FeatureForm.tsx.scriban", model, Path.Combine(componentsDir, $"{name}Form.tsx"));
+        }
 
         Console.WriteLine(" Generated feature files.");
+    }
+
+    private async Task<bool> AddComponentToExistingAsync()
+    {
+        var componentPath = Path.Combine(FeaturesDir, "components", $"{ComponentName}.tsx");
+        if (File.Exists(componentPath))
+        {
+            Console.WriteLine($"Component '{ComponentName}' already exists. Nothing to do.");
+            return false;
+        }
+
+        var model = new { name, name_kebab = NameKebab, name_screaming = NameScreaming };
+        var templateName = type == FeatureType.Form ? "FeatureForm.tsx.scriban" : "FeatureList.tsx.scriban";
+        await TemplateRenderer.RenderAsync(templateName, model, componentPath);
+
+        if (type == FeatureType.List)
+        {
+            var hookPath = Path.Combine(FeaturesDir, "hooks", $"use{name}.ts");
+            if (!File.Exists(hookPath))
+                await TemplateRenderer.RenderAsync("useFeature.ts.scriban", model, hookPath);
+        }
+
+        Console.WriteLine($" Generated {ComponentName}.tsx.");
+        WireIndexRoute();
+        return true;
     }
 
     private void WireIndexRoute()
@@ -51,17 +91,18 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null)
         }
 
         var lines = File.ReadAllText(IndexRoutePath).Split('\n').ToList();
-
         InsertImport(lines);
         InsertSentinelBlock(lines);
-
         File.WriteAllText(IndexRoutePath, string.Join('\n', lines));
-        Console.WriteLine($" Wired {name}List into {Path.GetRelativePath(_root.Root, IndexRoutePath)}.");
+        Console.WriteLine($" Wired {ComponentName} into {Path.GetRelativePath(_root.Root, IndexRoutePath)}.");
     }
 
     private void InsertImport(List<string> lines)
     {
-        var importLine = $"import {{ {name}List }} from '@/features/{NameKebab}/components/{name}List';";
+        var importLine = $"import {{ {ComponentName} }} from '@/features/{NameKebab}/components/{ComponentName}';";
+        if (lines.Any(l => l.Contains($"components/{ComponentName}'", StringComparison.Ordinal)))
+            return;
+
         var lastImportIdx = -1;
         for (var i = 0; i < lines.Count; i++)
         {
@@ -73,9 +114,20 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null)
 
     private void InsertSentinelBlock(List<string> lines)
     {
+        if (TryInsertIntoExistingSentinel(lines)) return;
         if (TryInsertAfterLastSentinel(lines)) return;
         if (TryReplacePlaceholderReturn(lines)) return;
         InsertBeforeClosingDiv(lines);
+    }
+
+    private bool TryInsertIntoExistingSentinel(List<string> lines)
+    {
+        var endIdx = lines.FindIndex(l => l.Contains(EndSentinel, StringComparison.Ordinal));
+        if (endIdx < 0) return false;
+        var componentTag = $"<{ComponentName} />";
+        if (lines.Any(l => l.Contains(componentTag, StringComparison.Ordinal))) return true;
+        lines.Insert(endIdx, $"{LeadingWhitespace(lines[endIdx])}{componentTag}");
+        return true;
     }
 
     private bool TryInsertAfterLastSentinel(List<string> lines)
@@ -104,7 +156,7 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null)
             $"{indent}return (",
             $"{indent}    <div className=\"mx-auto max-w-lg space-y-6\">",
             $"{indent}        {StartSentinel}",
-            $"{indent}        <{name}List />",
+            $"{indent}        <{ComponentName} />",
             $"{indent}        {EndSentinel}",
             $"{indent}    </div>",
             $"{indent});",
@@ -122,7 +174,7 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null)
     private string[] BuildSentinelLines(string indent) =>
     [
         $"{indent}{StartSentinel}",
-        $"{indent}<{name}List />",
+        $"{indent}<{ComponentName} />",
         $"{indent}{EndSentinel}",
     ];
 
