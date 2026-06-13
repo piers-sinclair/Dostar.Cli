@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.6.0...v0.7.0) (2026-06-13)
+
+
+### Features
+
+* detect gh CLI and tailor new-project next-steps instructions ([#40](https://github.com/piers-sinclair/Dostar.Cli/issues/40)) ([f71c4b5](https://github.com/piers-sinclair/Dostar.Cli/commit/f71c4b5657f7c24197bb8dd2f7d734f5a90f7247))
+* replace CLAUDE.md template intro paragraph in new-project ([#48](https://github.com/piers-sinclair/Dostar.Cli/issues/48)) ([3591a2f](https://github.com/piers-sinclair/Dostar.Cli/commit/3591a2f0fcec6d90b5cbafe079884f30e6281dd7))
+* strip README.md template content in new-project ([#47](https://github.com/piers-sinclair/Dostar.Cli/issues/47)) ([93731de](https://github.com/piers-sinclair/Dostar.Cli/commit/93731deb6e4f90463fd27c413fb3e7235f111ad8))
+
 ## [0.6.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.5.0...v0.6.0) (2026-06-13)
 
 
