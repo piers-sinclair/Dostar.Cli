@@ -13,6 +13,7 @@ namespace Dostar.Cli.Tests.Helpers;
 ///       src/
 ///         features/
 ///         routes/
+<<<<<<< HEAD
 ///           index.tsx   ← pre-populated with TodoList and sentinel comments
 /// </summary>
 internal sealed class FakeRepo : IDisposable
@@ -65,6 +66,7 @@ internal sealed class FakeRepo : IDisposable
             function IndexPage(): JSX.Element {
                 return (
                     <div className="mx-auto max-w-lg space-y-6">
+<<<<<<< HEAD
                         {/* dostar:feature:todos:start */}
                         <TodoList />
                         {/* dostar:feature:todos:end */}
