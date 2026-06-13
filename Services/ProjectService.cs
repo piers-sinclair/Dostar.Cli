@@ -4,7 +4,6 @@ internal sealed class ProjectService(string projectName, string? output, string 
 {
     private const string TemplateRepoUrl = "https://github.com/piers-sinclair/Dostar.git";
     private const string GitDirectoryName = ".git";
-
     private static readonly string[] TextExtensions =
     [
         ".cs", ".csproj", ".slnx", ".sln", ".json", ".xml", ".config", ".yaml", ".yml",
@@ -37,7 +36,7 @@ internal sealed class ProjectService(string projectName, string? output, string 
         ResetVersioning(outputDir);
 
         Console.WriteLine("Cleaning up template-specific documentation...");
-        CleanClaudeMd(outputDir);
+        ClaudeMdCleaner.Clean(outputDir, projectName);
         ReadmeCleaner.Clean(outputDir);
 
         Console.WriteLine("Initialising git repository...");
@@ -125,38 +124,6 @@ internal sealed class ProjectService(string projectName, string? output, string 
         var manifestPath = Path.Combine(rootDir, ".release-please-manifest.json");
         if (File.Exists(manifestPath))
             File.WriteAllText(manifestPath, "{\n  \".\": \"0.0.0\"\n}\n");
-    }
-
-    private static void CleanClaudeMd(string rootDir)
-    {
-        var claudeMdPath = Path.Combine(rootDir, "CLAUDE.md");
-        if (!File.Exists(claudeMdPath))
-            return;
-
-        var lines = File.ReadAllLines(claudeMdPath).ToList();
-
-        var blockStart = lines.FindIndex(l => l.StartsWith("> **Cross-repo dependency:**", StringComparison.Ordinal));
-        if (blockStart == -1)
-            return;
-
-        var blockEnd = blockStart + 1;
-        while (blockEnd < lines.Count && lines[blockEnd].StartsWith('>'))
-            blockEnd++;
-
-        lines.RemoveRange(blockStart, blockEnd - blockStart);
-
-        var result = new List<string>(lines.Count);
-        var prevBlank = false;
-        foreach (var line in lines)
-        {
-            var isBlank = string.IsNullOrWhiteSpace(line);
-            if (isBlank && prevBlank)
-                continue;
-            result.Add(line);
-            prevBlank = isBlank;
-        }
-
-        File.WriteAllLines(claudeMdPath, result);
     }
 
     private static bool IsUnderGitDirectory(string rootDir, string filePath) =>
