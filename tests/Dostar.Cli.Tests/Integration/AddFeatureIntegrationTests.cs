@@ -34,14 +34,25 @@ public class AddFeatureIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task AddAsync_NewFeature_CreatesRouteFileWithHeading()
+    public async Task AddAsync_NewFeature_CreatesRouteFileImportingComponent()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
 
         var routeFile = await File.ReadAllTextAsync(_repo.RouteFilePath("Billing"));
         routeFile.ShouldContain("createFileRoute('/billing')");
         routeFile.ShouldContain("BillingPage");
-        routeFile.ShouldContain("Billing</h1>");
+        routeFile.ShouldContain("@/features/billing/components/BillingPage");
+    }
+
+    [Fact]
+    public async Task AddAsync_NewFeature_CreatesComponentFileWithHeading()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+
+        var componentFile = await File.ReadAllTextAsync(
+            Path.Combine(_repo.FeaturesDir("Billing"), "components", "BillingPage.tsx"));
+        componentFile.ShouldContain("export function BillingPage");
+        componentFile.ShouldContain("Billing</h1>");
     }
 
     [Fact]

@@ -26,12 +26,14 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null)
 
     private async Task GenerateFilesAsync()
     {
-        Directory.CreateDirectory(Path.Combine(FeaturesDir, "components"));
+        var componentsDir = Path.Combine(FeaturesDir, "components");
+        Directory.CreateDirectory(componentsDir);
         Directory.CreateDirectory(Path.Combine(FeaturesDir, "hooks"));
         var mocksDir = Path.Combine(FeaturesDir, "mocks");
         Directory.CreateDirectory(mocksDir);
 
         var model = new { name, name_kebab = NameKebab, name_screaming = name.ToScreamingSnakeCase() };
+        await TemplateRenderer.RenderAsync("FeatureComponent.tsx.scriban", model, Path.Combine(componentsDir, $"{name}Page.tsx"));
         await TemplateRenderer.RenderAsync("handlers.ts.scriban", model, Path.Combine(mocksDir, "handlers.ts"));
 
         Console.WriteLine(" Generated feature files.");
