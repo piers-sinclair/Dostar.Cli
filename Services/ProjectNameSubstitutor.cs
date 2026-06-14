@@ -13,6 +13,7 @@ internal static class ProjectNameSubstitutor
     private const string PCliAddF = "\x01CLI_ADDF\x01";    // dostar add-feature
     private const string PCliRemoveF = "\x01CLI_REMF\x01"; // dostar remove-feature
     private const string PCliFSent = "\x01CLI_FSNT\x01";   // dostar:feature: (sentinel comment prefix)
+    private const string PCliJsxBare = "\x01CLI_JSXB\x01"; // <code ...>dostar</code> (bare CLI name in JSX)
 
     internal static string Substitute(string input, string projectName, string projectNameLower, string githubOrg)
     {
@@ -42,6 +43,7 @@ internal static class ProjectNameSubstitutor
             .Replace("dostar add-feature", PCliAddF)
             .Replace("dostar remove-feature", PCliRemoveF)
             .Replace("dostar:feature:", PCliFSent)
+            .Replace("<code className=\"text-xs\">dostar</code>", PCliJsxBare)
             // Apply project-name substitutions
             .Replace("piers-sinclair/Dostar", $"{githubOrg}/Dostar")
             .Replace("\"piers-sinclair\"", $"\"{githubOrg}\"")
@@ -56,5 +58,6 @@ internal static class ProjectNameSubstitutor
             .Replace(PCliRemove, "dostar remove-module")
             .Replace(PCliAddF, "dostar add-feature")
             .Replace(PCliRemoveF, "dostar remove-feature")
-            .Replace(PCliFSent, "dostar:feature:");
+            .Replace(PCliFSent, "dostar:feature:")
+            .Replace(PCliJsxBare, "<code className=\"text-xs\">dostar</code>");
 }
