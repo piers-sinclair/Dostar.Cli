@@ -131,4 +131,40 @@ public class ProjectNameSubstitutorTests
         Sub("_already done if you ran `dostar new-project`_")
             .ShouldBe("_already done if you ran `dostar new-project`_");
     }
+
+    [Fact]
+    public void Substitute_CliAddFeature_PreservesCommand()
+    {
+        Sub("dostar add-feature Orders --type list").ShouldBe("dostar add-feature Orders --type list");
+    }
+
+    [Fact]
+    public void Substitute_CliRemoveFeature_PreservesCommand()
+    {
+        Sub("dostar remove-feature todos").ShouldBe("dostar remove-feature todos");
+    }
+
+    [Fact]
+    public void Substitute_FeatureSentinelPrefix_PreservesDostarNamespace()
+    {
+        Sub("{/* dostar:feature:todos:start */}").ShouldBe("{/* dostar:feature:todos:start */}");
+    }
+
+    [Fact]
+    public void Substitute_HomePageCard_PreservesAllCliCommands()
+    {
+        const string input = """
+            <code>dostar add-module Orders</code>
+            <code>dostar add-feature Orders --type list</code>
+            dostar remove-feature todos
+            """;
+
+        var result = Sub(input);
+
+        result.ShouldContain("dostar add-module Orders");
+        result.ShouldContain("dostar add-feature Orders --type list");
+        result.ShouldContain("dostar remove-feature todos");
+        result.ShouldNotContain("myapp add-feature");
+        result.ShouldNotContain("myapp remove-feature");
+    }
 }

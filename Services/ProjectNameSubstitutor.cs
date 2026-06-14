@@ -4,12 +4,15 @@ internal static class ProjectNameSubstitutor
 {
     // Sentinel placeholders — \x01 is not a valid identifier character, so these can never appear
     // in source files naturally and will never collide with substituted content.
-    private const string PCliRepo = "\x01CLI_REPO\x01";   // piers-sinclair/Dostar.Cli
-    private const string PCliTool = "\x01CLI_TOOL\x01";   // Dostar.Cli (bare)
-    private const string PCliInline = "\x01CLI_INL\x01";    // `dostar` (inline code span)
-    private const string PCliNew = "\x01CLI_NEW\x01";    // dostar new-project
-    private const string PCliAdd = "\x01CLI_ADD\x01";    // dostar add-module
-    private const string PCliRemove = "\x01CLI_REM\x01";    // dostar remove-module
+    private const string PCliRepo = "\x01CLI_REPO\x01";    // piers-sinclair/Dostar.Cli
+    private const string PCliTool = "\x01CLI_TOOL\x01";    // Dostar.Cli (bare)
+    private const string PCliInline = "\x01CLI_INL\x01";   // `dostar` (inline code span)
+    private const string PCliNew = "\x01CLI_NEW\x01";      // dostar new-project
+    private const string PCliAdd = "\x01CLI_ADD\x01";      // dostar add-module
+    private const string PCliRemove = "\x01CLI_REM\x01";   // dostar remove-module
+    private const string PCliAddF = "\x01CLI_ADDF\x01";    // dostar add-feature
+    private const string PCliRemoveF = "\x01CLI_REMF\x01"; // dostar remove-feature
+    private const string PCliFSent = "\x01CLI_FSNT\x01";   // dostar:feature: (sentinel comment prefix)
 
     internal static string Substitute(string input, string projectName, string projectNameLower, string githubOrg)
     {
@@ -36,6 +39,9 @@ internal static class ProjectNameSubstitutor
             .Replace("dostar new-project", PCliNew)
             .Replace("dostar add-module", PCliAdd)
             .Replace("dostar remove-module", PCliRemove)
+            .Replace("dostar add-feature", PCliAddF)
+            .Replace("dostar remove-feature", PCliRemoveF)
+            .Replace("dostar:feature:", PCliFSent)
             // Apply project-name substitutions
             .Replace("piers-sinclair/Dostar", $"{githubOrg}/Dostar")
             .Replace("\"piers-sinclair\"", $"\"{githubOrg}\"")
@@ -47,5 +53,8 @@ internal static class ProjectNameSubstitutor
             .Replace(PCliInline, "`dostar`")
             .Replace(PCliNew, "dostar new-project")
             .Replace(PCliAdd, "dostar add-module")
-            .Replace(PCliRemove, "dostar remove-module");
+            .Replace(PCliRemove, "dostar remove-module")
+            .Replace(PCliAddF, "dostar add-feature")
+            .Replace(PCliRemoveF, "dostar remove-feature")
+            .Replace(PCliFSent, "dostar:feature:");
 }
