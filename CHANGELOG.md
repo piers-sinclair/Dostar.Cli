@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.7.0...v0.8.0) (2026-06-14)
+
+
+### Features
+
+* **cli:** add --type option to add-feature for list, form, and none shapes ([#55](https://github.com/piers-sinclair/Dostar.Cli/issues/55)) ([56c1020](https://github.com/piers-sinclair/Dostar.Cli/commit/56c102049a1a427a124c9918570478030b3530cc))
+* **cli:** scaffold List component and wire routes/index.tsx with sentinels in add-feature ([#53](https://github.com/piers-sinclair/Dostar.Cli/issues/53)) ([306850f](https://github.com/piers-sinclair/Dostar.Cli/commit/306850f331b200f2a25d3a5697362448b26ecfb7))
+
 ## [0.7.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.6.0...v0.7.0) (2026-06-13)
 
 
