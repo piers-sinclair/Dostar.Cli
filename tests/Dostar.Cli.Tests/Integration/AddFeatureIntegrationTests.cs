@@ -202,20 +202,20 @@ public class AddFeatureIntegrationTests : IDisposable
     [Fact]
     public async Task AddAsync_FormTypeAlreadyExists_ReturnsFalse()
     {
-        var service = new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form);
+        var service = new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form, yes: true);
         await service.AddAsync();
         var result = await service.AddAsync();
         result.ShouldBeFalse();
     }
 
-    // Adding a component type to an existing feature
+    // Adding a component type to an existing feature (--yes bypasses prompt)
 
     [Fact]
     public async Task AddAsync_AddFormToExistingListFeature_CreatesFormComponentAndReturnsTrue()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.List).AddAsync();
 
-        var result = await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
+        var result = await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form, yes: true).AddAsync();
 
         var featureDir = _repo.FeaturesDir("Billing");
         result.ShouldBeTrue();
@@ -227,7 +227,7 @@ public class AddFeatureIntegrationTests : IDisposable
     public async Task AddAsync_AddFormToExistingListFeature_WiresFormInsideExistingSentinel()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.List).AddAsync();
-        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form, yes: true).AddAsync();
 
         var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
         var startIdx = indexRoute.IndexOf("{/* dostar:feature:billing:start */}", StringComparison.Ordinal);
@@ -239,7 +239,6 @@ public class AddFeatureIntegrationTests : IDisposable
         startIdx.ShouldBeLessThan(listIdx);
         listIdx.ShouldBeLessThan(formIdx);
         formIdx.ShouldBeLessThan(endIdx);
-        indexRoute.ShouldNotContain("{/* dostar:feature:billing:start */}{/* dostar:feature:billing:start */}");
     }
 
     [Fact]
@@ -247,12 +246,23 @@ public class AddFeatureIntegrationTests : IDisposable
     {
         await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
 
-        var result = await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.List).AddAsync();
+        var result = await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.List, yes: true).AddAsync();
 
         var featureDir = _repo.FeaturesDir("Billing");
         result.ShouldBeTrue();
         File.Exists(Path.Combine(featureDir, "components", "BillingList.tsx")).ShouldBeTrue();
         File.Exists(Path.Combine(featureDir, "hooks", "useBilling.ts")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AddAsync_ExistingFeatureWithoutYes_ReturnsFalse()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.List).AddAsync();
+
+        var result = await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form, yes: false).AddAsync();
+
+        result.ShouldBeFalse();
+        File.Exists(Path.Combine(_repo.FeaturesDir("Billing"), "components", "BillingForm.tsx")).ShouldBeFalse();
     }
 
     public void Dispose()

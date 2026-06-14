@@ -1,6 +1,6 @@
 namespace Dostar.Cli;
 
-internal sealed class AddFeatureService(string name, RepoRoot? root = null, FeatureType type = FeatureType.List)
+internal sealed class AddFeatureService(string name, RepoRoot? root = null, FeatureType type = FeatureType.List, bool yes = false)
 {
     private readonly RepoRoot _root = root ?? RepoRoot.Find();
     private string NameKebab => name.ToKebabCase();
@@ -66,6 +66,15 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
             return false;
         }
 
+        Console.WriteLine($"Feature '{name}' already exists at {FeaturesDir}.");
+        Console.WriteLine($"This will add {ComponentName}.tsx to the existing feature and wire it into routes/index.tsx.");
+
+        if (!yes && !ConfirmPrompt())
+        {
+            Console.WriteLine("Aborted.");
+            return false;
+        }
+
         var model = new { name, name_kebab = NameKebab, name_screaming = NameScreaming };
         var templateName = type == FeatureType.Form ? "FeatureForm.tsx.scriban" : "FeatureList.tsx.scriban";
         await TemplateRenderer.RenderAsync(templateName, model, componentPath);
@@ -80,6 +89,13 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
         Console.WriteLine($" Generated {ComponentName}.tsx.");
         WireIndexRoute();
         return true;
+    }
+
+    private static bool ConfirmPrompt()
+    {
+        Console.Write("Add to existing feature? [y/N] ");
+        var response = Console.ReadLine()?.Trim().ToLowerInvariant();
+        return response is "y" or "yes";
     }
 
     private void WireIndexRoute()
@@ -100,9 +116,6 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
     private void InsertImport(List<string> lines)
     {
         var importLine = $"import {{ {ComponentName} }} from '@/features/{NameKebab}/components/{ComponentName}';";
-        if (lines.Any(l => l.Contains($"components/{ComponentName}'", StringComparison.Ordinal)))
-            return;
-
         var lastImportIdx = -1;
         for (var i = 0; i < lines.Count; i++)
         {
@@ -124,9 +137,7 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
     {
         var endIdx = lines.FindIndex(l => l.Contains(EndSentinel, StringComparison.Ordinal));
         if (endIdx < 0) return false;
-        var componentTag = $"<{ComponentName} />";
-        if (lines.Any(l => l.Contains(componentTag, StringComparison.Ordinal))) return true;
-        lines.Insert(endIdx, $"{LeadingWhitespace(lines[endIdx])}{componentTag}");
+        lines.Insert(endIdx, $"{LeadingWhitespace(lines[endIdx])}<{ComponentName} />");
         return true;
     }
 

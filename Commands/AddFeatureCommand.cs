@@ -14,15 +14,25 @@ internal static class AddFeatureCommand
             Description = "Component shape to scaffold: list (default), form, or none"
         };
 
+        var yesOpt = new Option<bool>("--yes")
+        {
+            Description = "Skip confirmation prompt when adding a component to an existing feature"
+        };
+        yesOpt.Aliases.Add("-y");
+
         var command = new Command("add-feature", "Scaffold a frontend feature folder, component, and route wiring");
         command.Arguments.Add(nameArg);
         command.Options.Add(typeOpt);
-        command.SetAction((parseResult, _) => HandleAsync(parseResult.GetValue(nameArg)!, parseResult.GetValue(typeOpt)));
+        command.Options.Add(yesOpt);
+        command.SetAction((parseResult, _) => HandleAsync(
+            parseResult.GetValue(nameArg)!,
+            parseResult.GetValue(typeOpt),
+            parseResult.GetValue(yesOpt)));
 
         return command;
     }
 
-    private static async Task<int> HandleAsync(string name, FeatureType type)
+    private static async Task<int> HandleAsync(string name, FeatureType type, bool yes)
     {
         if (!name.IsPascalCase())
         {
@@ -33,7 +43,7 @@ internal static class AddFeatureCommand
         }
 
         Console.WriteLine($"Scaffolding feature '{name}'...");
-        if (!await new AddFeatureService(name, type: type).AddAsync())
+        if (!await new AddFeatureService(name, type: type, yes: yes).AddAsync())
             return 0;
 
         Console.WriteLine($"Feature '{name}' scaffolded successfully.");
