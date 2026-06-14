@@ -5,25 +5,12 @@ internal sealed class RemoveFeatureService(string name, bool dryRun, bool yes, R
     private readonly RepoRoot _root = root ?? RepoRoot.Find();
     private string NameKebab => name.ToKebabCase();
     private string FeatureDir => Path.Combine(_root.Root, "frontend", "src", "features", NameKebab);
-    private string IndexRoutePath => Path.Combine(_root.Root, "frontend", "src", "routes", "index.tsx");
+    private string RouteFilePath => Path.Combine(_root.Root, "frontend", "src", "routes", $"{NameKebab}.tsx");
+    private string RootRoutePath => Path.Combine(_root.Root, "frontend", "src", "routes", "__root.tsx");
     private string StartSentinel => $"{{/* dostar:feature:{NameKebab}:start */}}";
     private string EndSentinel => $"{{/* dostar:feature:{NameKebab}:end */}}";
 
-    private const string AnySentinelMarker = "{/* dostar:feature:";
-
-    private const string IndexRoutePlaceholder =
-        """
-        import type { JSX } from 'react';
-        import { createFileRoute } from '@tanstack/react-router';
-
-        export const Route = createFileRoute('/')({
-            component: IndexPage,
-        });
-
-        function IndexPage(): JSX.Element {
-            return <></>;
-        }
-        """;
+    private const string AnyNavSentinelMarker = "{/* dostar:feature:";
 
     internal Task<int> RemoveAsync()
     {
@@ -48,7 +35,8 @@ internal sealed class RemoveFeatureService(string name, bool dryRun, bool yes, R
         }
 
         DeleteFeatureDir();
-        CleanIndexRoute();
+        DeleteRouteFile();
+        CleanRootNavLink();
         Console.WriteLine();
         Console.WriteLine($"Feature '{name}' removed successfully.");
         return Task.FromResult(0);
@@ -59,8 +47,10 @@ internal sealed class RemoveFeatureService(string name, bool dryRun, bool yes, R
         Console.WriteLine(dryRun ? "[DRY RUN] The following changes would be made:" : "The following changes will be made:");
         Console.WriteLine();
         Console.WriteLine($"  Remove directory:  {FeatureDir}");
-        if (File.Exists(IndexRoutePath) && File.ReadAllText(IndexRoutePath).Contains(StartSentinel, StringComparison.Ordinal))
-            Console.WriteLine($"  Update route:      {Path.GetRelativePath(_root.Root, IndexRoutePath)}");
+        if (File.Exists(RouteFilePath))
+            Console.WriteLine($"  Delete route file: {Path.GetRelativePath(_root.Root, RouteFilePath)}");
+        if (File.Exists(RootRoutePath) && File.ReadAllText(RootRoutePath).Contains(StartSentinel, StringComparison.Ordinal))
+            Console.WriteLine($"  Update nav:        {Path.GetRelativePath(_root.Root, RootRoutePath)}");
         Console.WriteLine();
     }
 
@@ -77,27 +67,33 @@ internal sealed class RemoveFeatureService(string name, bool dryRun, bool yes, R
         Console.WriteLine($"  Deleted: {FeatureDir}");
     }
 
-    private void CleanIndexRoute()
+    private void DeleteRouteFile()
     {
-        if (!File.Exists(IndexRoutePath))
+        if (!File.Exists(RouteFilePath))
+            return;
+        File.Delete(RouteFilePath);
+        Console.WriteLine($"  Deleted route: {Path.GetRelativePath(_root.Root, RouteFilePath)}");
+    }
+
+    private void CleanRootNavLink()
+    {
+        if (!File.Exists(RootRoutePath))
             return;
 
-        var content = File.ReadAllText(IndexRoutePath);
+        var content = File.ReadAllText(RootRoutePath);
         if (!content.Contains(StartSentinel, StringComparison.Ordinal))
             return;
 
         var lines = content.Split('\n').ToList();
-        RemoveFeatureImports(lines);
         RemoveSentinelBlock(lines);
 
-        var pruned = string.Join('\n', lines);
-        var hasRemainingFeatures = pruned.Contains(AnySentinelMarker, StringComparison.Ordinal);
-        File.WriteAllText(IndexRoutePath, hasRemainingFeatures ? pruned : IndexRoutePlaceholder);
-        Console.WriteLine($"  Updated route:     {Path.GetRelativePath(_root.Root, IndexRoutePath)}");
-    }
+        var hasRemainingFeatures = string.Join('\n', lines).Contains(AnyNavSentinelMarker, StringComparison.Ordinal);
+        if (!hasRemainingFeatures)
+            RemoveLinkImport(lines);
 
-    private void RemoveFeatureImports(List<string> lines) =>
-        lines.RemoveAll(l => l.Contains($"from '@/features/{NameKebab}/", StringComparison.Ordinal));
+        File.WriteAllText(RootRoutePath, string.Join('\n', lines));
+        Console.WriteLine($"  Updated nav:       {Path.GetRelativePath(_root.Root, RootRoutePath)}");
+    }
 
     private void RemoveSentinelBlock(List<string> lines)
     {
@@ -105,5 +101,16 @@ internal sealed class RemoveFeatureService(string name, bool dryRun, bool yes, R
         var endIdx = lines.FindIndex(l => l.Contains(EndSentinel, StringComparison.Ordinal));
         if (startIdx >= 0 && endIdx >= startIdx)
             lines.RemoveRange(startIdx, endIdx - startIdx + 1);
+    }
+
+    private static void RemoveLinkImport(List<string> lines)
+    {
+        var importIdx = lines.FindIndex(l => l.Contains("from '@tanstack/react-router'", StringComparison.Ordinal));
+        if (importIdx < 0) return;
+
+        var importLine = lines[importIdx];
+        if (!importLine.Contains("Link, ", StringComparison.Ordinal)) return;
+
+        lines[importIdx] = importLine.Replace("Link, ", "", StringComparison.Ordinal);
     }
 }
