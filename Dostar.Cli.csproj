@@ -11,7 +11,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dostar</ToolCommandName>
     <PackageId>Dostar.Cli</PackageId>
-    <Version>0.11.0</Version> <!-- x-release-please-version -->
+    <Version>0.12.0</Version> <!-- x-release-please-version -->
     <Description>CLI for the Dostar fullstack template (.NET modular monolith + React/Vite). Scaffold production-ready projects with exceptional developer experience, complete DevSecOps, and CI/CD that deploys to production in under 30 minutes.</Description>
     <Authors>Piers Sinclair</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
