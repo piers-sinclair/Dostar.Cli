@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.11.0...v0.12.0) (2026-06-14)
+
+
+### Features
+
+* remove hooks/ scaffold from add-feature and add remove-feature subdir test ([#69](https://github.com/piers-sinclair/Dostar.Cli/issues/69)) ([3321165](https://github.com/piers-sinclair/Dostar.Cli/commit/3321165cc259582ccbb7373eb24c9a9f59da7f90))
+
 ## [0.11.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.10.0...v0.11.0) (2026-06-14)
 
 
