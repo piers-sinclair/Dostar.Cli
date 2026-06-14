@@ -28,7 +28,6 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null)
     {
         var componentsDir = Path.Combine(FeaturesDir, "components");
         Directory.CreateDirectory(componentsDir);
-        Directory.CreateDirectory(Path.Combine(FeaturesDir, "hooks"));
         var mocksDir = Path.Combine(FeaturesDir, "mocks");
         Directory.CreateDirectory(mocksDir);
 

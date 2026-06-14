@@ -14,7 +14,6 @@ public class AddFeatureIntegrationTests : IDisposable
         var featureDir = _repo.FeaturesDir("Billing");
 
         Directory.Exists(Path.Combine(featureDir, "components")).ShouldBeTrue();
-        Directory.Exists(Path.Combine(featureDir, "hooks")).ShouldBeTrue();
         Directory.Exists(Path.Combine(featureDir, "mocks")).ShouldBeTrue();
         File.Exists(Path.Combine(featureDir, "mocks", "handlers.ts")).ShouldBeTrue();
     }

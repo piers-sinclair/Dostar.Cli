@@ -17,6 +17,16 @@ public class RemoveFeatureIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task RemoveAsync_FeatureWithSubdirectories_DeletesEntireTree()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+
+        await new RemoveFeatureService("Billing", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
+
+        Directory.Exists(_repo.FeaturesDir("Billing")).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task RemoveAsync_FeatureDoesNotExist_ReturnsErrorCode()
     {
         var result = await new RemoveFeatureService("NonExistent", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
