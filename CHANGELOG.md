@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.8.0...v0.9.0) (2026-06-14)
+
+
+### Features
+
+* **cli:** generate per-feature route files and wire nav links into __root.tsx ([#60](https://github.com/piers-sinclair/Dostar.Cli/issues/60)) ([4653e05](https://github.com/piers-sinclair/Dostar.Cli/commit/4653e05dfe5dcd5ddd11d739dbe74157740ffab7)), closes [#57](https://github.com/piers-sinclair/Dostar.Cli/issues/57)
+
+
+### Bug Fixes
+
+* **template:** replace _values with values in FeatureForm to fix ESLint no-unused-vars error ([#58](https://github.com/piers-sinclair/Dostar.Cli/issues/58)) ([20ab4f9](https://github.com/piers-sinclair/Dostar.Cli/commit/20ab4f9a2308beb552c521a6f6fcf410313ac140)), closes [#56](https://github.com/piers-sinclair/Dostar.Cli/issues/56)
+
 ## [0.8.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.7.0...v0.8.0) (2026-06-14)
 
 
