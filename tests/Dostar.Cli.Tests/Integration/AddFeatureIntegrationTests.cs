@@ -122,6 +122,149 @@ public class AddFeatureIntegrationTests : IDisposable
         result.ShouldBeFalse();
     }
 
+    // --type none
+
+    [Fact]
+    public async Task AddAsync_NoneType_CreatesFolderStructureAndHandlersOnly()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.None).AddAsync();
+
+        var featureDir = _repo.FeaturesDir("Billing");
+
+        Directory.Exists(Path.Combine(featureDir, "components")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(featureDir, "hooks")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(featureDir, "mocks")).ShouldBeTrue();
+        File.Exists(Path.Combine(featureDir, "mocks", "handlers.ts")).ShouldBeTrue();
+        File.Exists(Path.Combine(featureDir, "components", "BillingList.tsx")).ShouldBeFalse();
+        File.Exists(Path.Combine(featureDir, "hooks", "useBilling.ts")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AddAsync_NoneType_DoesNotWireIndexRoute()
+    {
+        var before = await File.ReadAllTextAsync(_repo.IndexRoutePath);
+
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.None).AddAsync();
+
+        var after = await File.ReadAllTextAsync(_repo.IndexRoutePath);
+        after.ShouldBe(before);
+    }
+
+    [Fact]
+    public async Task AddAsync_NoneTypeAlreadyExists_ReturnsFalse()
+    {
+        var service = new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.None);
+        await service.AddAsync();
+        var result = await service.AddAsync();
+        result.ShouldBeFalse();
+    }
+
+    // --type form
+
+    [Fact]
+    public async Task AddAsync_FormType_CreatesFormComponentWithoutHook()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
+
+        var featureDir = _repo.FeaturesDir("Billing");
+
+        File.Exists(Path.Combine(featureDir, "components", "BillingForm.tsx")).ShouldBeTrue();
+        File.Exists(Path.Combine(featureDir, "components", "BillingList.tsx")).ShouldBeFalse();
+        File.Exists(Path.Combine(featureDir, "hooks", "useBilling.ts")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AddAsync_FormType_FormComponentContainsFormElements()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
+
+        var featureDir = _repo.FeaturesDir("Billing");
+        var content = await File.ReadAllTextAsync(Path.Combine(featureDir, "components", "BillingForm.tsx"));
+
+        content.ShouldContain("BillingForm");
+        content.ShouldContain("useForm");
+        content.ShouldContain("handleSubmit");
+        content.ShouldContain("zodResolver");
+    }
+
+    [Fact]
+    public async Task AddAsync_FormType_WiresFormIntoIndexRoute()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
+
+        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
+        indexRoute.ShouldContain("import { BillingForm }");
+        indexRoute.ShouldContain("{/* dostar:feature:billing:start */}");
+        indexRoute.ShouldContain("<BillingForm />");
+        indexRoute.ShouldContain("{/* dostar:feature:billing:end */}");
+    }
+
+    [Fact]
+    public async Task AddAsync_FormTypeAlreadyExists_ReturnsFalse()
+    {
+        var service = new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form, yes: true);
+        await service.AddAsync();
+        var result = await service.AddAsync();
+        result.ShouldBeFalse();
+    }
+
+    // Adding a component type to an existing feature (--yes bypasses prompt)
+
+    [Fact]
+    public async Task AddAsync_AddFormToExistingListFeature_CreatesFormComponentAndReturnsTrue()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.List).AddAsync();
+
+        var result = await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form, yes: true).AddAsync();
+
+        var featureDir = _repo.FeaturesDir("Billing");
+        result.ShouldBeTrue();
+        File.Exists(Path.Combine(featureDir, "components", "BillingForm.tsx")).ShouldBeTrue();
+        File.Exists(Path.Combine(featureDir, "components", "BillingList.tsx")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AddAsync_AddFormToExistingListFeature_WiresFormInsideExistingSentinel()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.List).AddAsync();
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form, yes: true).AddAsync();
+
+        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
+        var startIdx = indexRoute.IndexOf("{/* dostar:feature:billing:start */}", StringComparison.Ordinal);
+        var endIdx = indexRoute.IndexOf("{/* dostar:feature:billing:end */}", StringComparison.Ordinal);
+        var listIdx = indexRoute.IndexOf("<BillingList />", StringComparison.Ordinal);
+        var formIdx = indexRoute.IndexOf("<BillingForm />", StringComparison.Ordinal);
+
+        indexRoute.ShouldContain("import { BillingForm }");
+        startIdx.ShouldBeLessThan(listIdx);
+        listIdx.ShouldBeLessThan(formIdx);
+        formIdx.ShouldBeLessThan(endIdx);
+    }
+
+    [Fact]
+    public async Task AddAsync_AddListToExistingFormFeature_CreatesListComponentAndHook()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
+
+        var result = await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.List, yes: true).AddAsync();
+
+        var featureDir = _repo.FeaturesDir("Billing");
+        result.ShouldBeTrue();
+        File.Exists(Path.Combine(featureDir, "components", "BillingList.tsx")).ShouldBeTrue();
+        File.Exists(Path.Combine(featureDir, "hooks", "useBilling.ts")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AddAsync_ExistingFeatureWithoutYes_ReturnsFalse()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.List).AddAsync();
+
+        var result = await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form, yes: false).AddAsync();
+
+        result.ShouldBeFalse();
+        File.Exists(Path.Combine(_repo.FeaturesDir("Billing"), "components", "BillingForm.tsx")).ShouldBeFalse();
+    }
+
     public void Dispose()
     {
         _repo.Dispose();
