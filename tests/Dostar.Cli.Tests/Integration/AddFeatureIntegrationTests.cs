@@ -49,7 +49,7 @@ public class AddFeatureIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task AddAsync_NewFeature_HookContainsQueryAndApiPath()
+    public async Task AddAsync_NewFeature_HookContainsQueryAndApiPathAndTodoComment()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
 
@@ -59,41 +59,77 @@ public class AddFeatureIntegrationTests : IDisposable
         hookContent.ShouldContain("useBilling");
         hookContent.ShouldContain("/api/v1/billing");
         hookContent.ShouldContain("useQuery");
+        hookContent.ShouldContain("TODO: Update this path");
     }
 
     [Fact]
-    public async Task AddAsync_NewFeature_WiresIntoIndexRouteWithSentinels()
+    public async Task AddAsync_NewFeature_CreatesRouteFile()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
 
-        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
-        indexRoute.ShouldContain("import { BillingList }");
-        indexRoute.ShouldContain("{/* dostar:feature:billing:start */}");
-        indexRoute.ShouldContain("<BillingList />");
-        indexRoute.ShouldContain("{/* dostar:feature:billing:end */}");
+        var routeFile = await File.ReadAllTextAsync(_repo.RouteFilePath("Billing"));
+        routeFile.ShouldContain("createFileRoute('/billing')");
+        routeFile.ShouldContain("BillingPage");
+        routeFile.ShouldContain("BillingList");
     }
 
     [Fact]
-    public async Task AddAsync_NewFeature_SentinelAppearsAfterExistingFeature()
+    public async Task AddAsync_NewFeature_WiresNavLinkIntoRootRoute()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
 
-        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
-        var todosEndIdx = indexRoute.IndexOf("{/* dostar:feature:todos:end */}", StringComparison.Ordinal);
-        var billingStartIdx = indexRoute.IndexOf("{/* dostar:feature:billing:start */}", StringComparison.Ordinal);
+        var rootRoute = await File.ReadAllTextAsync(_repo.RootRoutePath);
+        rootRoute.ShouldContain("{/* dostar:feature:billing:start */}");
+        rootRoute.ShouldContain("<Link to=\"/billing\"");
+        rootRoute.ShouldContain("Billing");
+        rootRoute.ShouldContain("{/* dostar:feature:billing:end */}");
+    }
+
+    [Fact]
+    public async Task AddAsync_NewFeature_AddsLinkImportToRootRouteWhenMissing()
+    {
+        await File.WriteAllTextAsync(_repo.RootRoutePath,
+            (await File.ReadAllTextAsync(_repo.RootRoutePath))
+                .Replace("Link, ", "", StringComparison.Ordinal));
+
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+
+        var rootRoute = await File.ReadAllTextAsync(_repo.RootRoutePath);
+        rootRoute.ShouldContain("import { Link,");
+    }
+
+    [Fact]
+    public async Task AddAsync_NewFeature_DoesNotDuplicateLinkImportWhenAlreadyPresent()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+
+        var rootRoute = await File.ReadAllTextAsync(_repo.RootRoutePath);
+        var linkImportCount = rootRoute.Split("import { Link").Length - 1;
+        linkImportCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task AddAsync_SecondFeature_NavLinkAppearsAfterExistingNavLink()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+
+        var rootRoute = await File.ReadAllTextAsync(_repo.RootRoutePath);
+        var todosEndIdx = rootRoute.IndexOf("{/* dostar:feature:todos:end */}", StringComparison.Ordinal);
+        var billingStartIdx = rootRoute.IndexOf("{/* dostar:feature:billing:start */}", StringComparison.Ordinal);
 
         todosEndIdx.ShouldBeLessThan(billingStartIdx);
     }
 
     [Fact]
-    public async Task AddAsync_NoIndexRoute_SkipsRouteWiringAndReturnsTrue()
+    public async Task AddAsync_NoRootRoute_SkipsNavWiringAndReturnsTrue()
     {
-        File.Delete(_repo.IndexRoutePath);
+        File.Delete(_repo.RootRoutePath);
 
         var result = await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
 
         result.ShouldBeTrue();
         File.Exists(Path.Combine(_repo.FeaturesDir("Billing"), "components", "BillingList.tsx")).ShouldBeTrue();
+        File.Exists(_repo.RouteFilePath("Billing")).ShouldBeTrue();
     }
 
     [Fact]
@@ -111,6 +147,16 @@ public class AddFeatureIntegrationTests : IDisposable
         handlersContent.ShouldContain("USER_MANAGEMENT_URL");
         handlersContent.ShouldContain("/api/v1/user-management");
         handlersContent.ShouldContain("RequestHandler[]");
+    }
+
+    [Fact]
+    public async Task AddAsync_MultiWordFeature_CreatesRouteFileWithKebabCasePath()
+    {
+        await new AddFeatureService("UserManagement", _repo.RepoRoot).AddAsync();
+
+        var routeFile = await File.ReadAllTextAsync(_repo.RouteFilePath("UserManagement"));
+        routeFile.ShouldContain("createFileRoute('/user-management')");
+        routeFile.ShouldContain("UserManagementPage");
     }
 
     [Fact]
@@ -140,14 +186,15 @@ public class AddFeatureIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task AddAsync_NoneType_DoesNotWireIndexRoute()
+    public async Task AddAsync_NoneType_DoesNotCreateRouteFileOrNavLink()
     {
-        var before = await File.ReadAllTextAsync(_repo.IndexRoutePath);
+        var rootBefore = await File.ReadAllTextAsync(_repo.RootRoutePath);
 
         await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.None).AddAsync();
 
-        var after = await File.ReadAllTextAsync(_repo.IndexRoutePath);
-        after.ShouldBe(before);
+        File.Exists(_repo.RouteFilePath("Billing")).ShouldBeFalse();
+        var rootAfter = await File.ReadAllTextAsync(_repo.RootRoutePath);
+        rootAfter.ShouldBe(rootBefore);
     }
 
     [Fact]
@@ -202,15 +249,15 @@ public class AddFeatureIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task AddAsync_FormType_WiresFormIntoIndexRoute()
+    public async Task AddAsync_FormType_CreatesRouteFileWithFormComponent()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
 
-        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
-        indexRoute.ShouldContain("import { BillingForm }");
-        indexRoute.ShouldContain("{/* dostar:feature:billing:start */}");
-        indexRoute.ShouldContain("<BillingForm />");
-        indexRoute.ShouldContain("{/* dostar:feature:billing:end */}");
+        var routeFile = await File.ReadAllTextAsync(_repo.RouteFilePath("Billing"));
+        routeFile.ShouldContain("createFileRoute('/billing')");
+        routeFile.ShouldContain("BillingPage");
+        routeFile.ShouldContain("BillingForm");
+        routeFile.ShouldNotContain("BillingList");
     }
 
     [Fact]
@@ -238,21 +285,14 @@ public class AddFeatureIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task AddAsync_AddFormToExistingListFeature_WiresFormInsideExistingSentinel()
+    public async Task AddAsync_AddFormToExistingListFeature_DoesNotAddSecondRouteOrNavLink()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.List).AddAsync();
         await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form, yes: true).AddAsync();
 
-        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
-        var startIdx = indexRoute.IndexOf("{/* dostar:feature:billing:start */}", StringComparison.Ordinal);
-        var endIdx = indexRoute.IndexOf("{/* dostar:feature:billing:end */}", StringComparison.Ordinal);
-        var listIdx = indexRoute.IndexOf("<BillingList />", StringComparison.Ordinal);
-        var formIdx = indexRoute.IndexOf("<BillingForm />", StringComparison.Ordinal);
-
-        indexRoute.ShouldContain("import { BillingForm }");
-        startIdx.ShouldBeLessThan(listIdx);
-        listIdx.ShouldBeLessThan(formIdx);
-        formIdx.ShouldBeLessThan(endIdx);
+        var rootRoute = await File.ReadAllTextAsync(_repo.RootRoutePath);
+        var billingStartCount = rootRoute.Split(["{/* dostar:feature:billing:start */}"], StringSplitOptions.None).Length - 1;
+        billingStartCount.ShouldBe(1);
     }
 
     [Fact]

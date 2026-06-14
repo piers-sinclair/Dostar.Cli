@@ -6,7 +6,8 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
     private string NameKebab => name.ToKebabCase();
     private string NameScreaming => name.ToScreamingSnakeCase();
     private string FeaturesDir => Path.Combine(_root.Root, "frontend", "src", "features", NameKebab);
-    private string IndexRoutePath => Path.Combine(_root.Root, "frontend", "src", "routes", "index.tsx");
+    private string RouteFilePath => Path.Combine(_root.Root, "frontend", "src", "routes", $"{NameKebab}.tsx");
+    private string RootRoutePath => Path.Combine(_root.Root, "frontend", "src", "routes", "__root.tsx");
     private string StartSentinel => $"{{/* dostar:feature:{NameKebab}:start */}}";
     private string EndSentinel => $"{{/* dostar:feature:{NameKebab}:end */}}";
     private string ComponentName => type == FeatureType.Form ? $"{name}Form" : $"{name}List";
@@ -17,7 +18,10 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
         {
             await GenerateFilesAsync();
             if (type != FeatureType.None)
-                WireIndexRoute();
+            {
+                await CreateRouteFile();
+                WireNavLink();
+            }
             return true;
         }
 
@@ -67,7 +71,7 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
         }
 
         Console.WriteLine($"Feature '{name}' already exists at {FeaturesDir}.");
-        Console.WriteLine($"This will add {ComponentName}.tsx to the existing feature and wire it into routes/index.tsx.");
+        Console.WriteLine($"This will add {ComponentName}.tsx to the existing feature.");
 
         if (!yes && !ConfirmPrompt())
         {
@@ -87,7 +91,6 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
         }
 
         Console.WriteLine($" Generated {ComponentName}.tsx.");
-        WireIndexRoute();
         return true;
     }
 
@@ -98,50 +101,42 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
         return response is "y" or "yes";
     }
 
-    private void WireIndexRoute()
+    private async Task CreateRouteFile()
     {
-        if (!File.Exists(IndexRoutePath))
+        var model = new { name, name_kebab = NameKebab, name_screaming = NameScreaming, type = type.ToString().ToLowerInvariant() };
+        await TemplateRenderer.RenderAsync("FeaturePage.tsx.scriban", model, RouteFilePath);
+        Console.WriteLine($" Created route file: {Path.GetRelativePath(_root.Root, RouteFilePath)}");
+    }
+
+    private void WireNavLink()
+    {
+        if (!File.Exists(RootRoutePath))
         {
-            Console.WriteLine($" Skipped route wiring: {Path.GetRelativePath(_root.Root, IndexRoutePath)} not found.");
+            Console.WriteLine($" Skipped nav link wiring: {Path.GetRelativePath(_root.Root, RootRoutePath)} not found.");
             return;
         }
 
-        var lines = File.ReadAllText(IndexRoutePath).Split('\n').ToList();
-        InsertImport(lines);
-        InsertSentinelBlock(lines);
-        File.WriteAllText(IndexRoutePath, string.Join('\n', lines));
-        Console.WriteLine($" Wired {ComponentName} into {Path.GetRelativePath(_root.Root, IndexRoutePath)}.");
+        var lines = File.ReadAllText(RootRoutePath).Split('\n').ToList();
+        EnsureLinkImport(lines);
+        InsertNavSentinelBlock(lines);
+        File.WriteAllText(RootRoutePath, string.Join('\n', lines));
+        Console.WriteLine($" Wired {name} nav link into {Path.GetRelativePath(_root.Root, RootRoutePath)}.");
     }
 
-    private void InsertImport(List<string> lines)
+    private static void EnsureLinkImport(List<string> lines)
     {
-        var importLine = $"import {{ {ComponentName} }} from '@/features/{NameKebab}/components/{ComponentName}';";
-        var lastImportIdx = -1;
-        for (var i = 0; i < lines.Count; i++)
-        {
-            if (lines[i].TrimStart().StartsWith("import ", StringComparison.Ordinal))
-                lastImportIdx = i;
-        }
-        lines.Insert(lastImportIdx >= 0 ? lastImportIdx + 1 : 0, importLine);
+        var importIdx = lines.FindIndex(l => l.Contains("from '@tanstack/react-router'", StringComparison.Ordinal));
+        if (importIdx < 0) return;
+
+        var importLine = lines[importIdx];
+        if (importLine.Contains(" Link", StringComparison.Ordinal)) return;
+
+        var braceIdx = importLine.IndexOf('{');
+        if (braceIdx >= 0)
+            lines[importIdx] = importLine.Insert(braceIdx + 2, "Link, ");
     }
 
-    private void InsertSentinelBlock(List<string> lines)
-    {
-        if (TryInsertIntoExistingSentinel(lines)) return;
-        if (TryInsertAfterLastSentinel(lines)) return;
-        if (TryReplacePlaceholderReturn(lines)) return;
-        InsertBeforeClosingDiv(lines);
-    }
-
-    private bool TryInsertIntoExistingSentinel(List<string> lines)
-    {
-        var endIdx = lines.FindIndex(l => l.Contains(EndSentinel, StringComparison.Ordinal));
-        if (endIdx < 0) return false;
-        lines.Insert(endIdx, $"{LeadingWhitespace(lines[endIdx])}<{ComponentName} />");
-        return true;
-    }
-
-    private bool TryInsertAfterLastSentinel(List<string> lines)
+    private void InsertNavSentinelBlock(List<string> lines)
     {
         var lastEndIdx = -1;
         for (var i = 0; i < lines.Count; i++)
@@ -149,43 +144,22 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
             if (lines[i].Contains(":end */}", StringComparison.Ordinal))
                 lastEndIdx = i;
         }
-        if (lastEndIdx < 0)
-            return false;
-        lines.InsertRange(lastEndIdx + 1, BuildSentinelLines(LeadingWhitespace(lines[lastEndIdx])));
-        return true;
+
+        if (lastEndIdx >= 0)
+        {
+            lines.InsertRange(lastEndIdx + 1, BuildNavSentinelLines(LeadingWhitespace(lines[lastEndIdx])));
+            return;
+        }
+
+        var navCloseIdx = lines.FindLastIndex(l => l.Trim() == "</nav>");
+        if (navCloseIdx >= 0)
+            lines.InsertRange(navCloseIdx, BuildNavSentinelLines(LeadingWhitespace(lines[navCloseIdx]) + "    "));
     }
 
-    private bool TryReplacePlaceholderReturn(List<string> lines)
-    {
-        var placeholderIdx = lines.FindIndex(l => l.Trim() == "return <></>;");
-        if (placeholderIdx < 0)
-            return false;
-        var indent = LeadingWhitespace(lines[placeholderIdx]);
-        lines.RemoveAt(placeholderIdx);
-        lines.InsertRange(placeholderIdx,
-        [
-            $"{indent}return (",
-            $"{indent}    <div className=\"mx-auto max-w-lg space-y-6\">",
-            $"{indent}        {StartSentinel}",
-            $"{indent}        <{ComponentName} />",
-            $"{indent}        {EndSentinel}",
-            $"{indent}    </div>",
-            $"{indent});",
-        ]);
-        return true;
-    }
-
-    private void InsertBeforeClosingDiv(List<string> lines)
-    {
-        var closingDivIdx = lines.FindLastIndex(l => l.Trim() == "</div>");
-        if (closingDivIdx >= 0)
-            lines.InsertRange(closingDivIdx, BuildSentinelLines(LeadingWhitespace(lines[closingDivIdx]) + "    "));
-    }
-
-    private string[] BuildSentinelLines(string indent) =>
+    private string[] BuildNavSentinelLines(string indent) =>
     [
         $"{indent}{StartSentinel}",
-        $"{indent}<{ComponentName} />",
+        $"{indent}<Link to=\"/{NameKebab}\" className=\"text-sm text-muted-foreground hover:text-foreground [&.active]:text-foreground [&.active]:font-medium\">{name}</Link>",
         $"{indent}{EndSentinel}",
     ];
 

@@ -13,7 +13,8 @@ namespace Dostar.Cli.Tests.Helpers;
 ///       src/
 ///         features/
 ///         routes/
-///           index.tsx   ← pre-populated with TodoList and sentinel comments
+///           index.tsx     ← clean placeholder (no feature wiring)
+///           __root.tsx    ← pre-populated with Link import and todos nav sentinel
 /// </summary>
 internal sealed class FakeRepo : IDisposable
 {
@@ -56,19 +57,39 @@ internal sealed class FakeRepo : IDisposable
             """
             import type { JSX } from 'react';
             import { createFileRoute } from '@tanstack/react-router';
-            import { TodoList } from '@/features/todos/components/TodoList';
 
             export const Route = createFileRoute('/')({
                 component: IndexPage,
             });
 
             function IndexPage(): JSX.Element {
+                return <></>;
+            }
+            """);
+
+        File.WriteAllText(
+            Path.Combine(routesDir, "__root.tsx"),
+            """
+            import type { JSX } from 'react';
+            import { Link, createRootRoute, Outlet } from '@tanstack/react-router';
+
+            export const Route = createRootRoute({
+                component: RootLayout,
+            });
+
+            function RootLayout(): JSX.Element {
                 return (
-                    <div className="mx-auto max-w-lg space-y-6">
-                        {/* dostar:feature:todos:start */}
-                        <TodoList />
-                        {/* dostar:feature:todos:end */}
-                    </div>
+                    <>
+                        <nav className="flex items-center gap-6 border-b bg-background px-8 py-4">
+                            <h1 className="text-lg font-semibold text-foreground">MyApp</h1>
+                            {/* dostar:feature:todos:start */}
+                            <Link to="/todos" className="text-sm text-muted-foreground hover:text-foreground [&.active]:text-foreground [&.active]:font-medium">Todos</Link>
+                            {/* dostar:feature:todos:end */}
+                        </nav>
+                        <main className="min-h-screen bg-background p-8">
+                            <Outlet />
+                        </main>
+                    </>
                 );
             }
             """);
@@ -84,6 +105,12 @@ internal sealed class FakeRepo : IDisposable
 
     internal string IndexRoutePath =>
         Path.Combine(Root, "frontend", "src", "routes", "index.tsx");
+
+    internal string RootRoutePath =>
+        Path.Combine(Root, "frontend", "src", "routes", "__root.tsx");
+
+    internal string RouteFilePath(string featureName) =>
+        Path.Combine(Root, "frontend", "src", "routes", $"{featureName.ToKebabCase()}.tsx");
 
     internal void CreateFeatureDir(string featureName) =>
         Directory.CreateDirectory(FeaturesDir(featureName));

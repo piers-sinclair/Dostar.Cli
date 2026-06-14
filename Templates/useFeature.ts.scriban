@@ -1,6 +1,8 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { apiClient } from '@/shared/api/client';
 
+// TODO: Update this path to match your backend module's endpoint.
+// e.g. for a Payments module consumed here: '/api/v1/payments'
 const {{ name_screaming }}_API_PATH = '/api/v1/{{ name_kebab }}';
 const {{ name_screaming }}_QUERY_KEY = ['{{ name_kebab }}'] as const;
 

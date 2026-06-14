@@ -55,79 +55,78 @@ public class RemoveFeatureIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task RemoveAsync_LastFeatureInRoute_ResetsIndexRouteToPlaceholder()
+    public async Task RemoveAsync_FeatureWithRouteFile_DeletesRouteFile()
     {
-        _repo.CreateFeatureDir("Todos");
-
-        await new RemoveFeatureService("Todos", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
-
-        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
-        indexRoute.ShouldNotContain("@/features/todos/");
-        indexRoute.ShouldNotContain("TodoList");
-        indexRoute.ShouldNotContain("{/* dostar:feature:");
-        indexRoute.ShouldContain("return <></>;");
-    }
-
-    [Fact]
-    public async Task RemoveAsync_WithOtherFeatureInRoute_LeavesOtherFeatureSentinelIntact()
-    {
-        _repo.CreateFeatureDir("Todos");
-        await File.WriteAllTextAsync(_repo.IndexRoutePath, """
-            import type { JSX } from 'react';
-            import { createFileRoute } from '@tanstack/react-router';
-            import { TodoList } from '@/features/todos/components/TodoList';
-            import { BillingList } from '@/features/billing/components/BillingList';
-
-            export const Route = createFileRoute('/')({
-                component: IndexPage,
-            });
-
-            function IndexPage(): JSX.Element {
-                return (
-                    <div className="mx-auto max-w-lg space-y-6">
-                        {/* dostar:feature:todos:start */}
-                        <TodoList />
-                        {/* dostar:feature:todos:end */}
-                        {/* dostar:feature:billing:start */}
-                        <BillingList />
-                        {/* dostar:feature:billing:end */}
-                    </div>
-                );
-            }
-            """);
-
-        await new RemoveFeatureService("Todos", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
-
-        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
-        indexRoute.ShouldNotContain("@/features/todos/");
-        indexRoute.ShouldNotContain("TodoList");
-        indexRoute.ShouldNotContain("{/* dostar:feature:todos:");
-        indexRoute.ShouldContain("@/features/billing/");
-        indexRoute.ShouldContain("BillingList");
-        indexRoute.ShouldContain("{/* dostar:feature:billing:start */}");
-    }
-
-    [Fact]
-    public async Task RemoveAsync_DryRun_LeavesIndexRouteIntact()
-    {
-        _repo.CreateFeatureDir("Todos");
-
-        await new RemoveFeatureService("Todos", dryRun: true, yes: true, _repo.RepoRoot).RemoveAsync();
-
-        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
-        indexRoute.ShouldContain("{/* dostar:feature:todos:start */}");
-    }
-
-    [Fact]
-    public async Task RemoveAsync_FeatureNotInRoute_LeavesIndexRouteUnchanged()
-    {
-        _repo.CreateFeatureDir("Billing");
-        var originalContent = await File.ReadAllTextAsync(_repo.IndexRoutePath);
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
 
         await new RemoveFeatureService("Billing", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
 
-        var indexRoute = await File.ReadAllTextAsync(_repo.IndexRoutePath);
-        indexRoute.ShouldBe(originalContent);
+        File.Exists(_repo.RouteFilePath("Billing")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task RemoveAsync_FeatureWithoutRouteFile_DoesNotThrow()
+    {
+        _repo.CreateFeatureDir("Billing");
+
+        var result = await new RemoveFeatureService("Billing", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
+
+        result.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task RemoveAsync_LastFeatureInNav_RemovesSentinelAndLinkImport()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+        _repo.CreateFeatureDir("Todos");
+
+        // Remove todos (pre-existing in __root.tsx) — replace root with only billing sentinel remaining
+        await new RemoveFeatureService("Todos", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
+        // Now remove billing — last sentinel
+        await new RemoveFeatureService("Billing", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
+
+        var rootRoute = await File.ReadAllTextAsync(_repo.RootRoutePath);
+        rootRoute.ShouldNotContain("{/* dostar:feature:");
+        rootRoute.ShouldNotContain("Link,");
+    }
+
+    [Fact]
+    public async Task RemoveAsync_WithOtherFeatureInNav_LeavesOtherNavLinkIntact()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+        _repo.CreateFeatureDir("Todos");
+
+        await new RemoveFeatureService("Billing", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
+
+        var rootRoute = await File.ReadAllTextAsync(_repo.RootRoutePath);
+        rootRoute.ShouldNotContain("{/* dostar:feature:billing:");
+        rootRoute.ShouldContain("{/* dostar:feature:todos:start */}");
+        rootRoute.ShouldContain("{/* dostar:feature:todos:end */}");
+        rootRoute.ShouldContain("Link,");
+    }
+
+    [Fact]
+    public async Task RemoveAsync_DryRun_LeavesRootRouteIntact()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot).AddAsync();
+        var before = await File.ReadAllTextAsync(_repo.RootRoutePath);
+
+        await new RemoveFeatureService("Billing", dryRun: true, yes: true, _repo.RepoRoot).RemoveAsync();
+
+        var after = await File.ReadAllTextAsync(_repo.RootRoutePath);
+        after.ShouldBe(before);
+    }
+
+    [Fact]
+    public async Task RemoveAsync_FeatureNotInRootRoute_LeavesRootRouteUnchanged()
+    {
+        _repo.CreateFeatureDir("Billing");
+        var before = await File.ReadAllTextAsync(_repo.RootRoutePath);
+
+        await new RemoveFeatureService("Billing", dryRun: false, yes: true, _repo.RepoRoot).RemoveAsync();
+
+        var after = await File.ReadAllTextAsync(_repo.RootRoutePath);
+        after.ShouldBe(before);
     }
 
     public void Dispose()
