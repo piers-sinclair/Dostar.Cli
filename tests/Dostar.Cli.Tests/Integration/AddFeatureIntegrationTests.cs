@@ -188,6 +188,20 @@ public class AddFeatureIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task AddAsync_FormType_FormComponentDoesNotContainUnusedValuesParameter()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
+
+        var featureDir = _repo.FeaturesDir("Billing");
+        var content = await File.ReadAllTextAsync(Path.Combine(featureDir, "components", "BillingForm.tsx"));
+
+        content.ShouldNotContain("_values");
+        content.ShouldContain("reset");
+        content.ShouldContain("mapProblemDetailsErrors");
+        content.ShouldContain("errors.root");
+    }
+
+    [Fact]
     public async Task AddAsync_FormType_WiresFormIntoIndexRoute()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
