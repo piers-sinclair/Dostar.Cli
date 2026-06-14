@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.10.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.9.0...v0.10.0) (2026-06-14)
+
+
+### Features
+
+* **add-feature:** remove --type option and simplify to single scaffold shape ([#64](https://github.com/piers-sinclair/Dostar.Cli/issues/64)) ([76842da](https://github.com/piers-sinclair/Dostar.Cli/commit/76842da379ea0bfadf9f4c5e2bbcdc6601fb87bb))
+
+
+### Bug Fixes
+
+* **token-replace:** protect dostar add-feature, remove-feature, and dostar:feature: sentinel prefix from substitution ([#62](https://github.com/piers-sinclair/Dostar.Cli/issues/62)) ([672e58b](https://github.com/piers-sinclair/Dostar.Cli/commit/672e58b783fb5065f68ec117290605053fa59c46)), closes [#61](https://github.com/piers-sinclair/Dostar.Cli/issues/61)
+
 ## [0.9.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.8.0...v0.9.0) (2026-06-14)
 
 
