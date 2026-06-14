@@ -186,15 +186,18 @@ public class AddFeatureIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task AddAsync_NoneType_DoesNotCreateRouteFileOrNavLink()
+    public async Task AddAsync_NoneType_CreatesRouteFileWithHeadingAndWiresNavLink()
     {
-        var rootBefore = await File.ReadAllTextAsync(_repo.RootRoutePath);
-
         await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.None).AddAsync();
 
-        File.Exists(_repo.RouteFilePath("Billing")).ShouldBeFalse();
-        var rootAfter = await File.ReadAllTextAsync(_repo.RootRoutePath);
-        rootAfter.ShouldBe(rootBefore);
+        var routeFile = await File.ReadAllTextAsync(_repo.RouteFilePath("Billing"));
+        routeFile.ShouldContain("createFileRoute('/billing')");
+        routeFile.ShouldContain("BillingPage");
+        routeFile.ShouldContain("Billing</h1>");
+
+        var rootRoute = await File.ReadAllTextAsync(_repo.RootRoutePath);
+        rootRoute.ShouldContain("{/* dostar:feature:billing:start */}");
+        rootRoute.ShouldContain("<Link to=\"/billing\"");
     }
 
     [Fact]
@@ -209,7 +212,7 @@ public class AddFeatureIntegrationTests : IDisposable
     // --type form
 
     [Fact]
-    public async Task AddAsync_FormType_CreatesFormComponentWithoutHook()
+    public async Task AddAsync_FormType_CreatesFormComponentAndMutationHook()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
 
@@ -217,7 +220,23 @@ public class AddFeatureIntegrationTests : IDisposable
 
         File.Exists(Path.Combine(featureDir, "components", "BillingForm.tsx")).ShouldBeTrue();
         File.Exists(Path.Combine(featureDir, "components", "BillingList.tsx")).ShouldBeFalse();
+        File.Exists(Path.Combine(featureDir, "hooks", "useCreateBilling.ts")).ShouldBeTrue();
         File.Exists(Path.Combine(featureDir, "hooks", "useBilling.ts")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AddAsync_FormType_MutationHookContainsMutationAndApiPath()
+    {
+        await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.Form).AddAsync();
+
+        var featureDir = _repo.FeaturesDir("Billing");
+        var hookContent = await File.ReadAllTextAsync(Path.Combine(featureDir, "hooks", "useCreateBilling.ts"));
+
+        hookContent.ShouldContain("useCreateBilling");
+        hookContent.ShouldContain("/api/v1/billing");
+        hookContent.ShouldContain("useMutation");
+        hookContent.ShouldContain("invalidateQueries");
+        hookContent.ShouldContain("TODO: Update this path");
     }
 
     [Fact]
@@ -272,7 +291,7 @@ public class AddFeatureIntegrationTests : IDisposable
     // Adding a component type to an existing feature (--yes bypasses prompt)
 
     [Fact]
-    public async Task AddAsync_AddFormToExistingListFeature_CreatesFormComponentAndReturnsTrue()
+    public async Task AddAsync_AddFormToExistingListFeature_CreatesFormComponentAndMutationHook()
     {
         await new AddFeatureService("Billing", _repo.RepoRoot, FeatureType.List).AddAsync();
 
@@ -282,6 +301,7 @@ public class AddFeatureIntegrationTests : IDisposable
         result.ShouldBeTrue();
         File.Exists(Path.Combine(featureDir, "components", "BillingForm.tsx")).ShouldBeTrue();
         File.Exists(Path.Combine(featureDir, "components", "BillingList.tsx")).ShouldBeTrue();
+        File.Exists(Path.Combine(featureDir, "hooks", "useCreateBilling.ts")).ShouldBeTrue();
     }
 
     [Fact]

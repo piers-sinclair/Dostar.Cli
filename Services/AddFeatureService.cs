@@ -17,11 +17,8 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
         if (!Directory.Exists(FeaturesDir))
         {
             await GenerateFilesAsync();
-            if (type != FeatureType.None)
-            {
-                await CreateRouteFile();
-                WireNavLink();
-            }
+            await CreateRouteFile();
+            WireNavLink();
             return true;
         }
 
@@ -56,6 +53,7 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
         else if (type == FeatureType.Form)
         {
             await TemplateRenderer.RenderAsync("FeatureForm.tsx.scriban", model, Path.Combine(componentsDir, $"{name}Form.tsx"));
+            await TemplateRenderer.RenderAsync("useCreateFeature.ts.scriban", model, Path.Combine(hooksDir, $"useCreate{name}.ts"));
         }
 
         Console.WriteLine(" Generated feature files.");
@@ -88,6 +86,12 @@ internal sealed class AddFeatureService(string name, RepoRoot? root = null, Feat
             var hookPath = Path.Combine(FeaturesDir, "hooks", $"use{name}.ts");
             if (!File.Exists(hookPath))
                 await TemplateRenderer.RenderAsync("useFeature.ts.scriban", model, hookPath);
+        }
+        else if (type == FeatureType.Form)
+        {
+            var hookPath = Path.Combine(FeaturesDir, "hooks", $"useCreate{name}.ts");
+            if (!File.Exists(hookPath))
+                await TemplateRenderer.RenderAsync("useCreateFeature.ts.scriban", model, hookPath);
         }
 
         Console.WriteLine($" Generated {ComponentName}.tsx.");

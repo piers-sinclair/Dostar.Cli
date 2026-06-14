@@ -16,6 +16,8 @@ function {{ name }}Page(): JSX.Element {
             <{{ name }}List />
             {{ else if type == "form" -}}
             <{{ name }}Form />
+            {{ else -}}
+            <h1 className="text-2xl font-bold tracking-tight">{{ name }}</h1>
             {{ end -}}
         </div>
     );
