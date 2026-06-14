@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.10.0...v0.11.0) (2026-06-14)
+
+
+### Features
+
+* scaffold component file from add-feature and protect bare dostar in JSX substitution ([#68](https://github.com/piers-sinclair/Dostar.Cli/issues/68)) ([f05760a](https://github.com/piers-sinclair/Dostar.Cli/commit/f05760a38702bdf26aba0f9e457d04d2c5a1db90))
+
+
+### Documentation
+
+* document add-feature and remove-feature in README ([#66](https://github.com/piers-sinclair/Dostar.Cli/issues/66)) ([2feed59](https://github.com/piers-sinclair/Dostar.Cli/commit/2feed59fd43ff88171aa069e1914ca4befcb2c2c))
+
 ## [0.10.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.9.0...v0.10.0) (2026-06-14)
 
 
