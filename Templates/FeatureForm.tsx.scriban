@@ -1,9 +1,11 @@
 import type { JSX } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { mapProblemDetailsErrors } from '@/shared/lib/mapProblemDetailsErrors';
 
 const schema = z.object({
     name: z.string().min(1, 'Required'),
@@ -15,11 +17,20 @@ export function {{ name }}Form(): JSX.Element {
     const {
         register,
         handleSubmit,
+        reset,
+        setError,
         formState: { errors, isSubmitting },
     } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-    async function submit(_values: FormValues) {
-        // TODO: call API
+    async function submit(values: FormValues) {
+        try {
+            // TODO: await create{{ name }}.mutateAsync({ name: values.name });
+            void values;
+            reset();
+            toast.success('{{ name }} saved');
+        } catch (err) {
+            mapProblemDetailsErrors(err, setError);
+        }
     }
 
     return (
@@ -30,6 +41,11 @@ export function {{ name }}Form(): JSX.Element {
                     {errors.name && (
                         <p className="mt-1 text-sm text-destructive" role="alert">
                             {errors.name.message}
+                        </p>
+                    )}
+                    {errors.root && (
+                        <p className="mt-1 text-sm text-destructive" role="alert">
+                            {errors.root.message}
                         </p>
                     )}
                 </div>
