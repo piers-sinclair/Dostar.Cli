@@ -9,30 +9,14 @@ internal static class AddFeatureCommand
             Description = "PascalCase name for the new feature (e.g. Billing)"
         };
 
-        var typeOpt = new Option<FeatureType>("--type")
-        {
-            Description = "Component shape to scaffold: list (default), form, or none"
-        };
-
-        var yesOpt = new Option<bool>("--yes")
-        {
-            Description = "Skip confirmation prompt when adding a component to an existing feature"
-        };
-        yesOpt.Aliases.Add("-y");
-
-        var command = new Command("add-feature", "Scaffold a frontend feature folder, component, and route wiring");
+        var command = new Command("add-feature", "Scaffold a frontend feature folder, route, and nav link");
         command.Arguments.Add(nameArg);
-        command.Options.Add(typeOpt);
-        command.Options.Add(yesOpt);
-        command.SetAction((parseResult, _) => HandleAsync(
-            parseResult.GetValue(nameArg)!,
-            parseResult.GetValue(typeOpt),
-            parseResult.GetValue(yesOpt)));
+        command.SetAction((parseResult, _) => HandleAsync(parseResult.GetValue(nameArg)!));
 
         return command;
     }
 
-    private static async Task<int> HandleAsync(string name, FeatureType type, bool yes)
+    private static async Task<int> HandleAsync(string name)
     {
         if (!name.IsPascalCase())
         {
@@ -43,7 +27,7 @@ internal static class AddFeatureCommand
         }
 
         Console.WriteLine($"Scaffolding feature '{name}'...");
-        if (!await new AddFeatureService(name, type: type, yes: yes).AddAsync())
+        if (!await new AddFeatureService(name).AddAsync())
             return 0;
 
         Console.WriteLine($"Feature '{name}' scaffolded successfully.");
