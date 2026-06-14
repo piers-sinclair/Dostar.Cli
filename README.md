@@ -3,8 +3,10 @@
 The `dostar` CLI is the entry point to [Dostar](https://github.com/piers-sinclair/Dostar) — a fullstack template built around exceptional developer experience, complete DevSecOps, and CI/CD that deploys to production in under 30 minutes. The CLI handles project creation and module scaffolding so your team skips straight to building features:
 
 - `dostar new-project` — clone the template and rename every token in one step
-- `dostar add-module` — scaffold a new feature module (Contracts, Implementation, tests)
-- `dostar remove-module` — cleanly remove a module and its references
+- `dostar add-module` — scaffold a new backend module (Contracts, Implementation, tests)
+- `dostar remove-module` — cleanly remove a backend module and its references
+- `dostar add-feature` — scaffold a new frontend feature folder, route file, and nav link
+- `dostar remove-feature` — remove a frontend feature folder, route file, and nav link
 
 ## Install
 
@@ -26,7 +28,17 @@ After installation, the `dostar` command is available on your PATH.
 ```bash
 dostar --help
 dostar --version
+
+# Project
 dostar new-project MyStartup
+
+# Backend modules
+dostar add-module Billing
+dostar remove-module Billing
+
+# Frontend features
+dostar add-feature Billing
+dostar remove-feature Billing
 ```
 
 ## Uninstall
