@@ -1,3 +1,4 @@
+global using AutoFixture;
 global using {{ prefix }}.{{ name }}.Implementation;
 global using Shouldly;
 global using Xunit;
