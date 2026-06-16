@@ -1,0 +1,2 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("{{ prefix }}.{{ name }}.UnitTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("{{ prefix }}.{{ name }}.IntegrationTests")]

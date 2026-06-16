@@ -20,6 +20,7 @@ public class AddModuleIntegrationTests : IDisposable
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Implementation", $"{p}.Billing.Implementation.csproj")).ShouldBeTrue();
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Implementation", "BillingModule.cs")).ShouldBeTrue();
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Implementation", "GlobalUsings.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(modulesDir, $"{p}.Billing.Implementation", "AssemblyAttributes.cs")).ShouldBeTrue();
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.UnitTests", $"{p}.Billing.UnitTests.csproj")).ShouldBeTrue();
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.UnitTests", "GlobalUsings.cs")).ShouldBeTrue();
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.UnitTests", "BillingModuleTests.cs")).ShouldBeTrue();
@@ -27,6 +28,18 @@ public class AddModuleIntegrationTests : IDisposable
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.IntegrationTests", "GlobalUsings.cs")).ShouldBeTrue();
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.IntegrationTests", "BillingModuleIntegrationTests.cs")).ShouldBeTrue();
         File.Exists(Path.Combine(modulesDir, $"{p}.Billing.IntegrationTests", "ApiFactory.cs")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AddAsync_NewModule_AssemblyAttributesHasInternalsVisibleTo()
+    {
+        await new AddModuleService("Billing", endpoints: true, _repo.RepoRoot).AddAsync();
+
+        var assemblyAttributes = await File.ReadAllTextAsync(
+            Path.Combine(_repo.ModulesDir("Billing"), $"{FakeRepo.Prefix}.Billing.Implementation", "AssemblyAttributes.cs"));
+
+        assemblyAttributes.ShouldContain($"InternalsVisibleTo(\"{FakeRepo.Prefix}.Billing.UnitTests\")");
+        assemblyAttributes.ShouldContain($"InternalsVisibleTo(\"{FakeRepo.Prefix}.Billing.IntegrationTests\")");
     }
 
     [Fact]
