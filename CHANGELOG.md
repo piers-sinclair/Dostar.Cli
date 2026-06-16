@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.13.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.12.0...v0.13.0) (2026-06-16)
+
+
+### Features
+
+* scaffold AssemblyAttributes.cs with InternalsVisibleTo for test projects ([#80](https://github.com/piers-sinclair/Dostar.Cli/issues/80)) ([1634997](https://github.com/piers-sinclair/Dostar.Cli/commit/1634997691908740478b45cff36fa0a6ded5faa9)), closes [#75](https://github.com/piers-sinclair/Dostar.Cli/issues/75)
+
+
+### Bug Fixes
+
+* add EF Core migration step to scaffolded ApiFactory ([#78](https://github.com/piers-sinclair/Dostar.Cli/issues/78)) ([3c11f90](https://github.com/piers-sinclair/Dostar.Cli/commit/3c11f90e6f703a76772c389803f737014c3bd824)), closes [#73](https://github.com/piers-sinclair/Dostar.Cli/issues/73)
+* **add-module:** replace EF InMemory with AutoFixture in unit-test template ([#81](https://github.com/piers-sinclair/Dostar.Cli/issues/81)) ([fbcae26](https://github.com/piers-sinclair/Dostar.Cli/commit/fbcae26cb20147622fc6719c3aa2b28405334cd8)), closes [#74](https://github.com/piers-sinclair/Dostar.Cli/issues/74)
+
 ## [0.12.0](https://github.com/piers-sinclair/Dostar.Cli/compare/v0.11.0...v0.12.0) (2026-06-14)
 
 
