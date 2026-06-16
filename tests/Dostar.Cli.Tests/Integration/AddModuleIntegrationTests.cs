@@ -40,6 +40,17 @@ public class AddModuleIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task AddAsync_NewModule_ApiFactoryAppliesEfMigrations()
+    {
+        await new AddModuleService("Billing", endpoints: true, _repo.RepoRoot).AddAsync();
+
+        var apiFactoryPath = Path.Combine(_repo.ModulesDir("Billing"), $"{FakeRepo.Prefix}.Billing.IntegrationTests", "ApiFactory.cs");
+        var content = await File.ReadAllTextAsync(apiFactoryPath);
+        content.ShouldContain("GetRequiredService<BillingDbContext>()");
+        content.ShouldContain("db.Database.MigrateAsync()");
+    }
+
+    [Fact]
     public async Task AddAsync_AlreadyExists_ReturnsFalse()
     {
         var service = new AddModuleService("Billing", endpoints: true, _repo.RepoRoot);
