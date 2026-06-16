@@ -52,6 +52,7 @@ internal sealed class AddModuleService(string name, bool endpoints, RepoRoot? ro
             TemplateRenderer.RenderAsync("Implementation.csproj.scriban", model, Path.Combine(implDir, $"{Prefix}.{name}.Implementation.csproj")),
             TemplateRenderer.RenderAsync("Module.cs.scriban", model, Path.Combine(implDir, $"{name}Module.cs")),
             TemplateRenderer.RenderAsync("ImplementationGlobalUsings.cs.scriban", model, Path.Combine(implDir, "GlobalUsings.cs")),
+            TemplateRenderer.RenderAsync("AssemblyAttributes.cs.scriban", model, Path.Combine(implDir, "AssemblyAttributes.cs")),
             TemplateRenderer.RenderAsync("UnitTests.csproj.scriban", model, Path.Combine(unitTestsDir, $"{Prefix}.{name}.UnitTests.csproj")),
             TemplateRenderer.RenderAsync("UnitTestsGlobalUsings.cs.scriban", model, Path.Combine(unitTestsDir, "GlobalUsings.cs")),
             TemplateRenderer.RenderAsync("UnitTestsClass.cs.scriban", model, Path.Combine(unitTestsDir, $"{name}ModuleTests.cs")),
