@@ -53,6 +53,28 @@ public class TemplateRendererTests : IDisposable
         content.ShouldContain("<TargetFramework>net10.0</TargetFramework>");
     }
 
+    [Fact]
+    public async Task RenderAsync_UnitTestsTemplate_PinsXunitRunnerVersion()
+    {
+        var model = new { name = "Billing", prefix = "MyApp", targetFramework = "net10.0" };
+
+        await TemplateRenderer.RenderAsync("UnitTests.csproj.scriban", model, _tempFile);
+
+        var content = await File.ReadAllTextAsync(_tempFile);
+        content.ShouldContain("xunit.runner.visualstudio\" Version=\"3.1.5\"");
+    }
+
+    [Fact]
+    public async Task RenderAsync_IntegrationTestsTemplate_PinsXunitRunnerVersion()
+    {
+        var model = new { name = "Billing", prefix = "MyApp", targetFramework = "net10.0" };
+
+        await TemplateRenderer.RenderAsync("IntegrationTests.csproj.scriban", model, _tempFile);
+
+        var content = await File.ReadAllTextAsync(_tempFile);
+        content.ShouldContain("xunit.runner.visualstudio\" Version=\"3.1.5\"");
+    }
+
     public void Dispose()
     {
         if (File.Exists(_tempFile))
